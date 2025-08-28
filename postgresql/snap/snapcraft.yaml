@@ -1,0 +1,122 @@
+name: dilyn-postgresql
+adopt-info: postgresql
+base: core22
+summary: PostgreSQL is a powerful, open source object-relational database system.
+description: |
+  PostgreSQL is a powerful, open source object-relational database system.
+  It has more than 15 years of active development and a proven architecture
+  that has earned it a strong reputation for reliability, data integrity,
+  and correctness.
+
+  This snap provides the postgresql binaries and libraries for creating and
+  managing postgres clusters from other snaps. This snap supplants the need
+  for the host to have a running postgresql instance on Classic systems, and
+  provides an automatable way to deploy postgres clusters on Ubuntu Core.
+
+  If another snap is going to create its own cluster, it should refrain from
+  using port 5432 as that is the port used by the postgresql server run by this
+  snap.
+
+  This is not an official postgresql snap.
+
+grade: stable
+confinement: strict
+
+license: "BSD-3-Clause AND CC-BY-SA-4.0 AND GPL-3.0-or-later"
+
+# Minimum snapd version to support using setpriv from base snap
+# https://github.com/canonical/snapd/commit/1792fa040db787d766098ba4238dbcfaddfe0f7e
+assumes: [snapd2.68]
+
+# pgdg ships a pgvector deb but we still want Ubuntu archive's postgresql, need to be careful
+package-repositories:
+  - type: apt
+    url: https://apt.postgresql.org/pub/repos/apt
+    suites: [jammy-pgdg]
+    components: [main]
+    key-id: B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+    architectures: [$CRAFT_ARCH_BUILD_FOR]
+
+# postgres hates to run with root permissions and this is a workaround to allow
+# a snap to drop privileges to some non-root user.
+# Requires setpriv and some sort of command chain script to handle permission
+# dropping. See: https://snapcraft.io/docs/system-usernames
+system-usernames:
+  _daemon_: shared
+
+# This slot exposes all of this snap to any other snap to use postgresql without
+# bundling any of postgresql. This allows multiple snaps to use the postgresql
+# snap however they see fit, without duplicating postgresql files on the device
+# (by bundling postgresql with every snap)
+slots:
+  postgresql:
+    interface: content
+    content: bins
+    read: [.]
+
+hooks:
+  install:
+    plugs: &_plugs [network, network-bind]
+    environment: &_env
+      PATH:            "${SNAP}/usr/lib/postgresql/14/bin:${PATH}"
+      LD_LIBRARY_PATH: "${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}"
+      PERL5LIB:        "${PERL5LIB}:${SNAP}/usr/share/perl5:${SNAP}/usr/share/perl"
+
+apps:
+  # This service manages postgres operations.
+  postgresql:
+    daemon: simple
+    command: launch-postgresql start
+    stop-command: launch-postgresql stop
+    reload-command: launch-postgresql reload
+    start-timeout: 10m
+    plugs: *_plugs
+    environment: *_env
+
+  # This app is meant for debugging
+  pgctl:
+    command: pgctl-wrapper
+    plugs: *_plugs
+    environment: *_env
+
+  # This app is meant for debugging
+  psql:
+    command: psql-wrapper
+    plugs: *_plugs
+    environment:
+      <<: *_env
+      PSQLRC: $SNAP_COMMON/.psqlrc
+
+parts:
+  postgresql:
+    plugin: dump
+    source: src/
+    stage-packages:
+      - perl
+      - postgresql=14+238
+      # For landscape. Ideally landscape (as a snap) would ship these. We need
+      # the extension control file bu that's not in the normal search path and
+      # not modifiable until postgresql 18:
+  # https://github.com/postgres/postgres/commit/4f7f7b0375854e2f89876473405a8f21c95012af
+      # There's no good reason it should be here and not with landscape;
+      # something to experiment with
+      # - postgresql-14-debversion
+      # - postgresql-plpython3-14
+      # - postgresql-contrib
+    override-build: |
+      craftctl default
+
+      craftctl set version=$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/postgresql_"*_all.deb Version)
+
+  # For immich. Ideally immich would ship these, but We need the extension
+  # control file but that's not in the normal search path and not modifiable
+  # until postgresql 18:
+  # https://github.com/postgres/postgres/commit/4f7f7b0375854e2f89876473405a8f21c95012af
+  # immich requires 0.7.0 <= pgvector < 1.0.0, 0.3.0 <= vchord < 0.5.0, and 14 <= postgresql < 18
+  # This pgvector should be 0.8.0-1.pgdg22.04+1
+  # This vchord should be 0.4.3
+  # This postgresql should be 14
+  vchord:
+    plugin: dump
+    source: https://github.com/tensorchord/VectorChord/releases/download/0.4.3/postgresql-14-vchord_0.4.3-1_${CRAFT_ARCH_BUILD_FOR}.deb
+    stage-packages: [postgresql-14-pgvector]

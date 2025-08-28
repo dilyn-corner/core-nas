@@ -1,0 +1,6 @@
+#!/bin/sh -eux
+
+setpriv               \
+  --clear-groups      \
+  --reuid _daemon_ \
+  --regid _daemon_ -- "${SNAP}/usr/bin/pg_ctl" "$@"

@@ -1,0 +1,94 @@
+#!/bin/sh -eux
+
+# TODO: this whole thing
+
+## Fine-tuning is desirable to improve performance.
+## Primarily, this would be accomplished by editing postgresql.conf
+## Instead of exposing that configuration file to a variety of snaps,
+## Give the administrator the power to configure postgresql directly.
+## Some reasonable insights can come from upstream:
+## https://wiki.postgresql.org/wiki/Tuning_Your_PostgreSQL_Server
+## Some suggestions for defaults
+# listen_addresses = '*'
+# max_connections = 400
+# max_prepared_transactions = 400
+# shared_buffers = {25% of available system memory}
+# effective_cache_size = {50% of available system memory}
+# wal_buffers = 1MB
+## It may also be desired to increase SHMMAX to half the available memory,
+##   though this may require system-files to write to /etc/sysctl.conf
+
+_setpriv() {
+    setpriv --clear-groups --reuid _daemon_ --regid _daemon_ -- "$@"
+}
+
+# Temporary, testing
+# _setpriv "$SNAP/configure"
+# snapctl restart "${SNAP_INSTANCE_NAME}.postgresql"
+
+# config_changes=0
+# config_file="${SNAP_COMMON}/database/postgresql.conf"
+
+# for opt in listen_address max_connections max_prepared_transactions \
+#            shared_buffers effective_cache_size wal_buffers; do
+#   # Uncomment the option and set the value
+#   sed -i "s/^#${opt}/${opt}/"                          "${config_file}"
+#   sed -i "s/^${opt}.*/${opt} = $(snapctl get ${opt})/" "${config_file}"
+#   # If the option is unset, return the value to its "default"
+#   [ -n "$(snapctl get $opt)" ] || {
+#       case $opt in
+#         max_prepared_transactions)
+#           sed -i "s/^${opt}.*/#${opt} = 0/"        "${config_file}" ;;
+#         wal_buffers)
+#           sed -i "s/^${opt}.*/#${opt} = -1/"       "${config_file}" ;;
+#         max_connections)
+#           sed -i "s/^${opt}.*/${opt} = 100/"       "${config_file}" ;;
+#         effective_cache_size)
+#           sed -i "s/^${opt}.*/#${opt} = 4GB/"      "${config_file}" ;;
+#         shared_buffers)
+#           sed -i "s/^${opt}.*/${opt} = 128MB/"     "${config_file}" ;;
+#         listen_address)
+#           sed -i "s/^${opt}.*/#${opt} = localhost/" "${config_file}" ;;
+#       esac
+#   }
+#   # At this point a change has occurred which requires restarting postgresql
+#   config_changes=$((config_changes + 1))
+# done
+
+# ## Users
+# ## If localhost = * is set in postgresql.conf, a user probably wants to handle
+# ## database connections in a fine-grained manner. In such a case, we need to be
+# ## able to edit pg_hba.conf.
+
+# authentication_tracking="${SNAP_COMMON}/tracker.conf"
+# authentication_config="${SNAP_COMMON}/database/pg_hba.conf"
+
+# [ -z "$(snapctl get pg-additions)" ] || {
+#   for num in $(seq "$(snapctl get pg-additions)"); do
+#     _type="$(snapctl get "user${num}.type")"
+#     _database="$(snapctl get "user${num}.database")"
+#     _user="$(snapctl get "user${num}.user")"
+#     _address="$(snapctl get "user${num}.address")"
+#     _method="$(snapctl get "user${num}.method")"
+  
+#     _add="$_type $_database $_user $_address $_method"
+#     if ! grep -q "$_add" "${authentication_config}"; then
+#       echo "$_add" | tee -a "${authentication_config}"
+#     fi
+  
+#     # We have to track what authentication lines have been added in a separate
+#     # file so that if they get removed (their values get unset) we remove them
+#     # from the file. Unfortunately snapctl doesn't allow us to introspect what
+#     # value has been unset :|
+#     echo "$_add" >> "{authenication_tracking}"
+  
+#     if ! grep -q "$_add" "${authentication_config}" &&\
+#          grep -q "$_add" "${authentication_tracking}"; then
+#       sed -i "/$_add/d" "${authentication_config}"
+#     fi
+#   done
+# }
+
+# [ "${config_changes}" = 0 ] || {
+#   snapctl restart "${SNAP_INSTANCE_NAME}.postgresql"
+# }

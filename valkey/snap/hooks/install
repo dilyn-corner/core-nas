@@ -1,0 +1,27 @@
+#!/bin/sh -eux
+
+_port="$(snapctl get port)"
+
+[ -n "${_port}" ] || snapctl set port=6379
+
+cat > "${SNAP_COMMON}/valkey.conf" << EOF
+bind 127.0.0.1
+protected-mode yes
+port "$(snapctl get port)"
+tcp-backlog 511
+timeout 0
+tcp-keepalive 300
+daemonize no
+pidfile /tmp/valkey_$(snapctl get port).pid
+loglevel warning
+logfile ""
+databases 16
+always-show-logo no
+set-proc-title no
+rdbcompression yes
+rdbchecksum yes
+dbfilename dump.rdb
+rdb-del-sync-files no
+dir "${SNAP_COMMON}"
+oom-score-adj no
+EOF

@@ -1,0 +1,44 @@
+name: dilyn-valkey
+base: core22
+adopt-info: valkey
+summary: An in-memory database that persists on disk
+description: |
+  This project was forked from the open source Redis project right before the
+  transition to their new source available licenses.
+
+  This description is just a fast quick start document. More details can be
+  found under valkey.io
+
+  What is Valkey?
+  Valkey is a high-performance data structure server that primarily serves
+  key/value workloads. It supports a wide range of native structures and an
+  extensible plugin system for adding new data structures and access patterns.
+
+  This is an unofficial snap.
+
+grade: stable
+confinement: strict
+
+apps:
+  valkey:
+    command: usr/bin/valkey-server $SNAP_COMMON/valkey.conf
+    daemon: simple
+    plugs: [network, network-bind]
+
+parts:
+  valkey:
+    plugin: make
+    source: https://github.com/valkey-io/valkey
+    source-depth: 1
+    source-type: git
+    source-tag: 8.1.3
+    build-packages: [libsystemd-dev, libssl-dev, pkgconf]
+    make-parameters:
+      - PREFIX=/usr
+      - BUILD_TLS=yes
+      - BUILD_SYSTEMD=yes
+      - INSTALL_BIN="${CRAFT_PART_INSTALL}/usr/bin"
+    override-pull: |
+      craftctl default
+
+      craftctl set version="$(git describe --tags)"

@@ -1,0 +1,272 @@
+name: dilyn-immich
+base: core22
+adopt-info: immich
+summary: High performance self-hosted photo and video management solution.
+description: |
+  immich is intended to be a high performance self-hosted alternative to larger
+  cloud offerings for similar services. The features are numerous. For more
+  information on immich in general, see the upstream documentation:
+  https://immich.app/docs/overview/introduction
+
+  This particular snap is unaffiliated with the official upstream and is
+  intended for use on Ubuntu Core. The primary focus is on factoring out as much
+  as the infrastructure to other snaps as possible. This means:
+
+  1) using a separate http server snap
+  2) using a separate data store snap
+  3) using a separate database snap
+  4) using a separate graphics libraries snap
+
+  The canonical implementation is using caddy, dilyn-valkey, dilyn-postgresql,
+  and dilyn-jellyfin-ffmpeg to expose all the underlying infrastructure. Please
+  refer to those snaps for more information on their usage.
+
+  Essentially, this snap should deploy and function out-of-the-box when using
+  those snaps. Immich should expose itself on some port (3001 by default) to
+  all devices on a LAN (or on the broader internet, if setup as such), it should
+  manage its own database as configured using the postgresql snap, and it should
+  handle any graphical needs via the graphics libraries snap.
+
+grade: devel
+confinement: strict
+
+assumes: [snapd2.68]
+
+# postgres hates to run with root permissions and this is a workaround to allow
+# a snap to drop privileges to some non-root user.
+# Requires setpriv and some sort of command chain script to handle permission
+# dropping. See: https://snapcraft.io/docs/system-usernames
+system-usernames:
+  _daemon_: shared
+
+plugs:
+  postgresql:
+    interface: content
+    content: bins
+    target: postgresql
+    # default-provider: dilyn-postgresql
+  graphics-core22:
+    interface: content
+    content: bins
+    target: graphics
+    # default-provider: dilyn-jellyfin-ffmpeg
+
+layout:
+  /usr/share/libdrm/amdgpu.ids:
+    bind-file: $SNAP/usr/share/libdrm/amdgpu.ids
+
+hooks:
+  connect-plug-postgresql:
+    plugs: &_pgplugs [network, network-bind, postgresql]
+    environment: &_pgenv
+      PGDATA:     ${SNAP_COMMON}/postgresql/database
+      PGPASSFILE: ${SNAP_COMMON}/postgresql/.pgpass
+      PATH: ${SNAP}/postgresql/usr/lib/postgresql/14/bin:${PATH}
+      LD_LIBRARY_PATH: ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}
+
+apps:
+  server:
+    after: [postgresql]
+    command: usr/bin/immich-server.sh
+    command-chain: [bin/graphics-core22-wrapper]
+    daemon: simple
+    install-mode: disable
+    plugs: [graphics-core22, network, network-bind, postgresql, mount-observe, opengl, removable-media]
+    # Documentation for all the supported env variables available at https://immich.app/docs/install/environment-variables
+    # Any user-configurable environment variables can be set via snap
+    # configuration and will be set to expected defaults in immich-server.sh
+    environment:
+      PATH:               ${SNAP}/postgresql/usr/lib/postgresql/14/bin:${SNAP}/graphics/bin:${PATH}
+      PERL5LIB:           ${SNAP}/usr/share/perl5:${SNAP}/usr/share/perl:${PERL5LIB}
+      LD_LIBRARY_PATH:    ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib:${SNAP}/graphics/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${SNAP}/graphics/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/vdpau:${LD_LIBRARY_PATH}
+      LIBGL_DRIVERS_PATH: ${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib:${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/dri:${SNAP}/graphics/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/dri:${LIBGL_DRIVERS_PATH}
+      LIBVA_DRIVERS_PATH: ${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib:${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/dri:${SNAP}/graphics/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/dri:${LIBVA_DRIVERS_PATH}
+      DB_PORT:                           5433
+      DB_HOSTNAME:                       127.0.0.1
+      DB_USERNAME:                       postgres
+      DB_PASSWORD:                       postgres
+      DB_DATABASE_NAME:                  immich
+      REDIS_PORT:                        6379
+      REDIS_HOSTNAME:                    127.0.0.1
+      NODE_ENV:                          production
+      IMMICH_ENV:                        production
+      IMMICH_PORT:                       3001
+      IMMICH_API_METRICS_PORT:           8081
+      IMMICH_MICROSERVICES_METRICS_PORT: 8082
+      IMMICH_MEDIA_LOCATION:             ${SNAP_COMMON}/upload
+      IMMICH_BUILD_DATA:                 ${SNAP}/usr/lib/immich/build
+
+  postgresql:
+    command: usr/bin/postgresql.sh start
+    daemon: simple
+    install-mode: disable
+    stop-command: usr/bin/postgresql.sh stop
+    reload-command: usr/bin/postgresql.sh reload
+    plugs: *_pgplugs
+    environment: *_pgenv
+
+  createdb:
+    after: [postgresql]
+    command: usr/bin/postgresql.sh createdb
+    daemon: simple
+    install-mode: disable
+    plugs: *_pgplugs
+    environment: *_pgenv
+
+  # TODO: impl
+  # ml:
+  #   command: usr/bin/machine-learning.sh
+  #   daemon: simple
+  #   install-mode: disable
+  #   environment:
+  #     PYTHONUNBUFFERED:        1
+  #     PYTHONDONTWRITEBYTECODE: 1
+  #     NODE_ENV:           production
+  #     VIRTUAL_ENV:        "$SNAP/opt/immich-machine-learning/venv"
+  #     IMMICH_BUILD_DATA:  "$SNAP/usr/lib/immich/build"
+  #     TRANSFORMERS_CACHE: /tmp/cache
+
+parts:
+  scripts:
+    source: src/
+    plugin: dump
+    organize:
+      '*': usr/bin/
+
+  immich:
+    plugin: nil
+    source: https://github.com/immich-app/immich
+    source-depth: 1
+    source-type: git
+    source-tag: v1.139.4
+    build-snaps: [node/22/stable]
+    stage-snaps: [node/22/stable]
+    build-packages:
+      - libfftw3-dev
+      - libopenexr-dev
+      - libgsf-1-dev
+      - libglib2.0-dev
+      - liborc-dev
+      - libopenslide-dev
+      - libmatio-dev
+      - libwebp-dev
+      - libjpeg-turbo8-dev
+      - libexpat1-dev
+      - libexif-dev
+      - libtiff5-dev
+      - libcfitsio-dev
+      - libpoppler-glib-dev
+      - librsvg2-dev
+      - libpango1.0-dev
+      - libopenjp2-7-dev
+      - libimagequant-dev
+      - liblcms2-dev
+      - libvips-dev
+    stage-packages: [libvips42, perl]
+    override-pull: |
+      craftctl default
+
+      craftctl set version=$(git describe --tags)
+
+      # Get pnpm real quick...
+      npm install -g pnpm@latest-10
+
+      # Eliminate a racey failure that pops up on fast store, virtiofs, etc
+      # We delete here and again in the build because if a build fails, the
+      # directory may still be present
+      rm -rf ~/.local/share/pnpm/store
+    override-build: |
+      install -Dm644 LICENSE \
+        "${CRAFT_PART_INSTALL}/usr/lib/immich/app/LICENSE"
+
+      # TODO: mkdir and cp can be moved to organize...
+      mkdir -p "${CRAFT_PART_INSTALL}/usr/bin"              \
+               "${CRAFT_PART_INSTALL}/usr/lib/immich/cli"   \
+               "${CRAFT_PART_INSTALL}/usr/lib/immich/build" \
+               "${CRAFT_PART_INSTALL}/usr/lib/immich/app/server"
+
+      # Server
+      pnpm fetch
+      pnpm install --filter immich --frozen-lockfile --offline
+      pnpm --filter immich --frozen-lockfile build
+      pnpm --filter immich --frozen-lockfile --prod deploy --legacy output/server-pruned
+
+      cp -rfT output/server-pruned "${CRAFT_PART_INSTALL}/usr/lib/immich/app/server"
+
+      # Eliminate a racey failure that pops up on fast store, virtiofs, etc
+      rm -rf ~/.local/share/pnpm/store
+
+      # SDK and web frontend
+      pnpm --filter @immich/sdk --filter immich-web --frozen-lockfile --force install
+      pnpm --filter @immich/sdk --filter immich-web build
+
+      mkdir -p "${CRAFT_PART_INSTALL}/usr/lib/immich/build"
+      cp -rf web/build "${CRAFT_PART_INSTALL}/usr/lib/immich/build/www"
+
+      # CLI
+      pnpm install --filter @immich/cli --frozen-lockfile
+      pnpm --filter @immich/cli --prod --no-optional deploy output/cli-pruned
+
+      cp -rfT output/cli-pruned "${CRAFT_PART_INSTALL}/usr/lib/immich/cli"
+
+      ln -sf ../lib/immich/cli/bin/immich "${CRAFT_PART_INSTALL}/usr/bin/immich"
+
+    stage:
+      - -usr/lib/immich/app/server/node_modules/.pnpm/bcrypt@6.0.0/node_modules/bcrypt/prebuilds/linux-arm/bcrypt.musl.node
+      - -usr/lib/immich/app/server/node_modules/.pnpm/bcrypt@6.0.0/node_modules/bcrypt/prebuilds/linux-arm/bcrypt.glibc.node
+      - -usr/lib/immich/app/server/node_modules/.pnpm/bcrypt@6.0.0/node_modules/bcrypt/prebuilds/linux-arm64/bcrypt.glibc.node
+      - -usr/lib/immich/app/server/node_modules/.pnpm/@msgpackr-extract+msgpackr-extract-linux-x64@3.0.3/node_modules/@msgpackr-extract/mhgpackr-extract-linux-x64/node.napi.musl.node
+      - -usr/lib/immich/app/server/node_modules/.pnpm/@msgpackr-extract+msgpackr-extract-linux-x64@3.0.3/node_modules/@msgpackr-extract/msgpackr-extract-linux-x64/node.abi115.musl.node
+
+  # Generate build-lock.json
+  build-lock:
+    after: [immich]
+    plugin: nil
+    source: https://github.com/immich-app/base-images
+    source-depth: 1
+    source-type: git
+    build-packages: [jq]
+    override-stage: |
+      jq -s '.' "${CRAFT_PART_SRC}/server/packages/"*.json > /tmp/packages.json
+      jq -s '.' "${CRAFT_PART_SRC}/server/sources/"*.json > /tmp/sources.json
+
+      jq -n --slurpfile sources /tmp/sources.json --slurpfile packages /tmp/packages.json \
+        '{sources: $sources[0], packages: $packages[0]}' \
+        > "${CRAFT_STAGE}/usr/lib/immich/build/build-lock.json"
+      chmod 644 "${CRAFT_STAGE}/usr/lib/immich/build/build-lock.json"
+
+      craftctl default
+
+  geonames:
+    plugin: nil
+    source: https://download.geonames.org/export/dump/cities500.zip
+    override-pull: |
+      craftctl default
+
+      mkdir -p "${CRAFT_PART_INSTALL}/usr/lib/immich/build/geodata"
+
+      curl -o "${CRAFT_PART_INSTALL}/usr/lib/immich/build/geodata/admin1CodesASCII.txt"             \
+        https://download.geonames.org/export/dump/admin1CodesASCII.txt
+      curl -o "${CRAFT_PART_INSTALL}/usr/lib/immich/build/geodata/admin2Codes.txt"                  \
+        https://download.geonames.org/export/dump/admin2Codes.txt
+      curl -o "${CRAFT_PART_INSTALL}/usr/lib/immich/build/geodata/ne_10m_admin_0_countries.geojson" \
+        https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_0_countries.geojson
+
+      cp -f "${CRAFT_PART_SRC}/"* "${CRAFT_PART_INSTALL}/usr/lib/immich/build/geodata"
+
+      date --iso-8601=seconds | tr -d "\n" > "${CRAFT_PART_INSTALL}/usr/lib/immich/build/geodata/geodata-date.txt"
+
+  # Remove any overlapping binaries provided by our graphics snap
+  # Not currently perfectly one-to-one, but it may just be "good enough"
+  graphics-core22:
+    after: [immich]
+    plugin: dump
+    source: https://github.com/canonical/gpu-snap
+    source-depth: 1
+    source-type: git
+    source-branch: main
+    stage:
+      - bin/graphics-core22-wrapper
+    override-prime: |
+      craftctl default
+      "${CRAFT_PART_SRC}/bin/graphics-core22-cleanup" mesa-core22 nvidia-core22

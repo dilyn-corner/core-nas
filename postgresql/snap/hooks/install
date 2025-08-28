@@ -1,0 +1,45 @@
+#!/bin/sh -eux
+
+_setpriv() {
+    setpriv --clear-groups --reuid _daemon_ --regid _daemon_ -- "$@"
+}
+
+_pw="$(snapctl get dbpass)"
+[ -z "$_pw" ] || {
+    _pw=postgres
+}
+
+# We only want the octal to apply to the last directory
+# shellcheck disable=2174
+mkdir -pm 0750 "${SNAP_COMMON}/logs"     \
+               "${SNAP_COMMON}/history"  \
+               "${SNAP_COMMON}/database" \
+               "${SNAP_COMMON}/postgresql"
+
+# postgres does not like being root. Satisfy it by dropping priv
+# As a result, directory ownership must change
+# References to setpriv-wrapper indicate when priveleges must be dropped
+chown -Rf _daemon_:_daemon_ "${SNAP_COMMON}/logs"       \
+                                  "${SNAP_COMMON}/history"    \
+                                  "${SNAP_COMMON}/database"   \
+                                  "${SNAP_COMMON}/postgresql"
+
+echo "$_pw" > /tmp/pwfile
+
+# TODO: make database initialization configurable.
+# Create a cluster so that postgres is available immediately.
+_setpriv initdb                        \
+    --pgdata="${SNAP_COMMON}/database" \
+    --username=postgres                \
+    --pwfile=/tmp/pwfile               \
+    --no-instructions
+
+rm -f /tmp/pwfile
+
+# _setpriv sed -i 's|^#dynamic_library_path|dynamic_library_path|' \
+#     "${SNAP_COMMON}/database/postgresql.conf"
+
+# # We don't want to expand libdir here
+# #shellcheck disable=2016
+# _setpriv sed -i 's|$libdir|/snap/postgresql/current/extlibs:$libdir|' \
+#     "${SNAP_COMMON}/database/postgresql.conf"

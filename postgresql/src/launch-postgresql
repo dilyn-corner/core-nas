@@ -1,0 +1,29 @@
+#!/bin/sh -eux
+
+_setpriv() {
+	setpriv --clear-groups --reuid _daemon_ --regid _daemon_ -- "$@"
+}
+
+log() {
+    printf '%s: %s\n' "$1" "$2"
+}
+
+start() {
+    log "INFO" "Starting postgresql database"
+    _setpriv postgres -h 127.0.0.1   \
+        -D "${SNAP_COMMON}/database" \
+        -k "${SNAP_COMMON}/postgresql"
+}
+
+stop() {
+    log "WARN" "Stopping postgresql database"
+    pg_pid="$(head -1 "${SNAP_COMMON}/database/postmaster.pid")"
+    kill -INT "$pg_pid"
+}
+
+reload() {
+    log "INFO" "Restarting postgresql database"
+    stop && start
+}
+
+"$@"

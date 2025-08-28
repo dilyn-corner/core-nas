@@ -1,0 +1,152 @@
+name: dilyn-jellyfin-ffmpeg
+base: core22
+adopt-info: jellyfin-ffmpeg
+summary: ffmpeg binaries and libraries from the Jellyfin project
+description: |
+  This snap provides the ffmpeg binaries and libraries used by the Jellyfin
+  project to facilitate things like hardware encode/decode.
+
+  It serves a similar purpose to other snaps such as mesa-core22 and
+  ffmpeg-2204, but with an alternative upstream.
+
+  It follows a similar practices as the mesa-core22 snap. Snaps which consume
+  this snap should try and make use of the suggestions in the gpu-snap repository:
+  https://github.com/canonical/gpu-snap
+
+confinement: strict
+
+package-repositories:
+  - type: apt
+    url: https://repo.jellyfin.org/ubuntu
+    priority: prefer
+    suites: [jammy]
+    components: [main]
+    architectures: [$CRAFT_ARCH_BUILD_FOR]
+    key-id: 4918AABC486CA052358D778D49023CD01DE21A7B
+  - type: apt
+    url: https://repo.radeon.com/rocm/apt/debian
+    priority: prefer
+    suites: [jammy]
+    components: [main]
+    architectures: [$CRAFT_ARCH_BUILD_FOR]
+    key-id: CA8BB4727A47B4D09B4EE8969386B48A1A693C5C
+
+slots:
+  graphics-core22:
+    interface: content
+    content: bins
+    read: [.]
+
+layout:
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio:
+    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/dri:
+    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/dri
+  /usr/share/zoneinfo-icu:
+    bind: $SNAP/usr/share/zoneinfo-icu
+  /usr/share/libdrm/amdgpu.ids:
+    bind-file: $SNAP/usr/share/libdrm/amdgpu.ids
+  /usr/share/fonts:
+    bind: $SNAP/usr/share/fonts
+  /etc/fonts:
+    bind: $SNAP/etc/fonts
+  /etc/igfx_user_feature_next.txt:
+    bind-file: $SNAP_DATA/igfx_user_feature_next.txt
+  /etc/vdpau_wrapper.cfg:
+    bind-file: $SNAP/etc/vdpau_wrapper.cfg
+  /etc/OpenCL:
+    bind: $SNAP/etc/OpenCL
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl:
+    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl
+  /opt:
+    bind: $SNAP/opt
+
+apps:
+  vainfo:
+    command: usr/bin/vainfo
+    plugs: [opengl]
+    environment: &_environment
+      PATH:               ${SNAP}/opt/rocm-6.4.3/bin:${PATH}
+      LD_LIBRARY_PATH:    ${SNAP}/usr/lib:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/vdpau:${LD_LIBRARY_PATH}
+      LIBGL_DRIVERS_PATH: ${SNAP}/usr/lib:${SNAP}/usr/lib/dri:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/dri:${LIBGL_DRIVERS_PATH}
+      LIBVA_DRIVERS_PATH: ${SNAP}/usr/lib:${SNAP}/usr/lib/dri:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/dri:${LIBVA_DRIVERS_PATH}
+      # Enable OpenCL on older AMD cards
+      ROC_ENABLE_PRE_VEGA: "1"
+
+  ffmpeg:
+    command: usr/bin/ffmpeg
+    plugs: [opengl]
+    environment: *_environment
+
+  clinfo:
+    command: usr/bin/clinfo
+    environment: *_environment
+    plugs: [opengl]
+
+  vulkaninfo:
+    command: usr/bin/vulkaninfo
+    plugs: [opengl]
+    environment: *_environment
+
+parts:
+  jellyfin-ffmpeg:
+    plugin: nil
+    # RUNPATH is hard-coded for our libraries but we want them accessible from anywhere
+    build-packages: [chrpath]
+    stage-packages:
+      - clinfo
+      - jellyfin-ffmpeg7
+      - libavcodec-extra58
+      - libavcodec58
+      - libdrm-common
+      - va-driver-all
+      - vulkan-tools
+      - on amd64:
+        - intel-opencl-icd
+        - libquadmath0
+        - rocm-opencl-runtime
+    override-build: |
+      craftctl default
+      craftctl set version="$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/jellyfin-ffmpeg7_"*.deb Version)"
+    organize:
+      usr/lib/jellyfin-ffmpeg/ffmpeg:  usr/bin/ffmpeg
+      usr/lib/jellyfin-ffmpeg/ffprobe: usr/bin/ffprobe
+      usr/lib/jellyfin-ffmpeg/vainfo:  usr/bin/vainfo
+    override-stage: |
+      craftctl default
+
+      # Remove fully qualified paths so that library search paths are respected
+      sed -i 's|/usr/lib/jellyfin-ffmpeg/lib/||' \
+        "${CRAFT_STAGE}/usr/lib/jellyfin-ffmpeg/share/vulkan/"*/*.json
+
+      chrpath -d "${CRAFT_STAGE}/usr/bin/ffmpeg"  \
+                 "${CRAFT_STAGE}/usr/bin/ffprobe" \
+                 "${CRAFT_STAGE}/usr/bin/vainfo"
+
+      find "${CRAFT_PART_INSTALL}/opt/rocm-6.4.3/lib" \
+           "${CRAFT_PART_INSTALL}/usr/lib/jellyfin-ffmpeg" -type f | while read -r file; do
+        # Failing is fine
+        chrpath -d "$file" || continue
+      done
+    stage:
+      - -usr/include/
+      - -usr/share/man/
+
+  mesa-core22:
+    plugin: nil
+    source: https://github.com/canonical/mesa-core22
+    source-depth: 1
+    source-type: git
+    source-branch: main
+    override-pull: |
+      craftctl default
+
+      patch -p1 < "${CRAFT_PROJECT_DIR}/patches/jellyfin-paths.patch"
+    override-build: |
+      sed "s/@ARCH_TRIPLETS@/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/" \
+        "${CRAFT_PART_SRC}/scripts/bin/graphics-core22-provider-wrapper.in" \
+        > "${CRAFT_PART_INSTALL}/graphics-core22-provider-wrapper"
+
+      chmod 555 "${CRAFT_PART_INSTALL}/graphics-core22-provider-wrapper"
+    organize:
+      graphics-core22-provider-wrapper: bin/
