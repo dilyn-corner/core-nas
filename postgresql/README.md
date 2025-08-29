@@ -4,6 +4,11 @@ Snap package for [PostgreSQL](https://www.postgresql.org/).
 
 *This is an unofficial snap and not officially supported by or released by PostgreSQL.*
 
+[![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/dilyn-postgresql)
+
+[![dilyn-postgresql](https://snapcraft.io/dilyn-postgresql/badge.svg)](https://snapcraft.io/dilyn-postgresql)
+[![dilyn-postgresql](https://snapcraft.io/dilyn-postgresql/trending.svg?name=0)](https://snapcraft.io/dilyn-postgresql)
+
 ## Interfaces
 
 The interfaces (both [network](https://snapcraft.io/docs/network-interface) and

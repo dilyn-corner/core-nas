@@ -4,6 +4,11 @@ Snap package for the [Jellyfin media server](https://jellyfin.org/).
 
 *This is an unofficial snap and not officially supported or released by Jellyfin.*
 
+[![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/dilyn-jellyfin)
+
+[![dilyn-jellyfin](https://snapcraft.io/dilyn-jellyfin/badge.svg)](https://snapcraft.io/dilyn-jellyfin)
+[![dilyn-jellyfin](https://snapcraft.io/dilyn-jellyfin/trending.svg?name=0)](https://snapcraft.io/dilyn-jellyfin)
+
 ## Interfaces
 
 This snap requires [dilyn-jellyfin-ffmpeg](https://snapcraft.io/dilyn-jellyfin-ffmpeg)

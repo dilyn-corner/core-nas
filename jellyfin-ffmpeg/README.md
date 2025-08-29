@@ -10,6 +10,11 @@ for accelerated transcoding tasks.
 
 *This is an unofficial snap and not officially supported or released by Jellyfin.*
 
+[![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/dilyn-jellyfin-ffmpeg)
+
+[![dilyn-jellyfin-ffmpeg](https://snapcraft.io/dilyn-jellyfin-ffmpeg/badge.svg)](https://snapcraft.io/dilyn-jellyfin-ffmpeg)
+[![dilyn-jellyfin-ffmpeg](https://snapcraft.io/dilyn-jellyfin-ffmpeg/trending.svg?name=0)](https://snapcraft.io/dilyn-jellyfin-ffmpeg)
+
 ## Interfaces
 
 This snap provides the [graphics-core22](https://canonical.com/mir/docs/the-graphics-core22-snap-interface)
