@@ -1,6 +1,12 @@
 name: dilyn-jellyfin
-base: core22
 adopt-info: jellyfin
+base: core22
+icon: snap/gui/icon.png
+license: "CC-BY-NC-SA-4.0 AND GPL-2.0"
+website: https://jellyfin.org
+contact: dilyn.corner@tutanota.com
+issues: https://github.com/dilyn-corner/core-nas/issues
+source-code: https://github.com/dilyn-corner/core-nas/tree/22/jellyfin
 summary:  "Jellyfin: The Free Software Media System"
 description: |
   Jellyfin is the volunteer-built media solution that puts you in control of
@@ -10,10 +16,6 @@ description: |
   This is an unofficial snap.
 
   This snap is intended to be used in conjunction with dilyn-jellyfin-ffmpeg.
-
-source-code: https://github.com/dilyn-corner/core-nas/tree/main/jellyfin
-contact: dilyn.corner@tutanota.com
-issues: https://github.com/dilyn-corner/core-nas/issues
 
 grade: stable
 confinement: strict

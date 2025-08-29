@@ -1,6 +1,12 @@
 name: dilyn-immich
-base: core22
 adopt-info: immich
+base: core22
+icon: snap/gui/icon.png
+license: "CC-BY-NC-SA-4.0 AND AGPL-3.0"
+website: https://immich.app
+contact: dilyn.corner@tutanota.com
+issues: https://github.com/dilyn-corner/core-nas/issues
+source-code: https://github.com/dilyn-corner/core-nas/tree/22/immich
 summary: High performance self-hosted photo and video management solution.
 description: |
   immich is intended to be a high performance self-hosted alternative to larger

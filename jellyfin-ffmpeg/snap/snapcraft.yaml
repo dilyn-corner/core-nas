@@ -1,6 +1,12 @@
 name: dilyn-jellyfin-ffmpeg
-base: core22
 adopt-info: jellyfin-ffmpeg
+base: core22
+icon: snap/gui/icon.png
+license: "CC-BY-NC-SA-4.0 AND GPL-2.0"
+website: https://jellyfin.org
+contact: dilyn.corner@tutanota.com
+issues: https://github.com/dilyn-corner/core-nas/issues
+source-code: https://github.com/dilyn-corner/core-nas/tree/22/jellyfin-ffmpeg
 summary: ffmpeg binaries and libraries from the Jellyfin project
 description: |
   This snap provides the ffmpeg binaries and libraries used by the Jellyfin
