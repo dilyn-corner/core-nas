@@ -42,3 +42,7 @@ parts:
       craftctl default
 
       craftctl set version="$(git describe --tags)"
+    override-prime: |
+      craftctl default
+
+      find "${CRAFT_PRIME}/usr/bin" -exec strip -s -R .comment -R .note {} \;
