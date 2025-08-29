@@ -29,6 +29,7 @@ license: "BSD-3-Clause AND CC-BY-SA-4.0 AND GPL-3.0-or-later"
 assumes: [snapd2.68]
 
 # pgdg ships a pgvector deb but we still want Ubuntu archive's postgresql, need to be careful
+# We'd leverage the priority field, but that breaks apt's ability to fetch the pgvector package
 package-repositories:
   - type: apt
     url: https://apt.postgresql.org/pub/repos/apt
@@ -91,9 +92,7 @@ parts:
   postgresql:
     plugin: dump
     source: src/
-    stage-packages:
-      - perl
-      - postgresql=14+238
+    stage-packages: [perl, postgresql=14+238]
       # For landscape. Ideally landscape (as a snap) would ship these. We need
       # the extension control file bu that's not in the normal search path and
       # not modifiable until postgresql 18:
