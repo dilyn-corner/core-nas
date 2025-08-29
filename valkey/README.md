@@ -4,6 +4,11 @@ Snap package for [Valkey](https://valkey.io)
 
 *This is an unofficial snap and not officially supported or released by Valkey.*
 
+[![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/dilyn-valkey)
+
+[![dilyn-valkey](https://snapcraft.io/dilyn-valkey/badge.svg)](https://snapcraft.io/dilyn-valkey)
+[![dilyn-valkey](https://snapcraft.io/dilyn-valkey/trending.svg?name=0)](https://snapcraft.io/dilyn-valkey)
+
 ## Interfaces
 
 The interfaces (both [network](https://snapcraft.io/docs/network-interface) and

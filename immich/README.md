@@ -4,6 +4,11 @@ Snap package for [Immich](https://immich.app).
 
 * This is an unofficial snap and not officially supported or released by Immich.*
 
+[![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/dilyn-immich)
+
+[![dilyn-immich](https://snapcraft.io/dilyn-immich/badge.svg)](https://snapcraft.io/dilyn-immich)
+[![dilyn-immich](https://snapcraft.io/dilyn-immich/trending.svg?name=0)](https://snapcraft.io/dilyn-immich)
+
 ## Interfaces
 
 This snap declares the [removable-media](https://snapcraft.io/docs/removable-media-interface)
