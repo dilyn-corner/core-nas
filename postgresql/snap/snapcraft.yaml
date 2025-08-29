@@ -1,6 +1,12 @@
 name: dilyn-postgresql
 adopt-info: postgresql
 base: core22
+icon: snap/gui/icon.png
+license: "CC-BY-NC-SA-4.0 AND BSD-3-Clause AND GPL-3.0-or-later"
+website: https://postgresql.org
+contact: dilyn.corner@tutanota.com
+issues: https://github.com/dilyn-corner/core-nas/issues
+source-code: https://github.com/dilyn-corner/core-nas/tree/22/postgresql
 summary: PostgreSQL is a powerful, open source object-relational database system.
 description: |
   PostgreSQL is a powerful, open source object-relational database system.
@@ -21,8 +27,6 @@ description: |
 
 grade: stable
 confinement: strict
-
-license: "BSD-3-Clause AND CC-BY-SA-4.0 AND GPL-3.0-or-later"
 
 # Minimum snapd version to support using setpriv from base snap
 # https://github.com/canonical/snapd/commit/1792fa040db787d766098ba4238dbcfaddfe0f7e
