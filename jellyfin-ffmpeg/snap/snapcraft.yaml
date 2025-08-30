@@ -31,12 +31,18 @@ package-repositories:
     architectures: [$CRAFT_ARCH_BUILD_FOR]
     key-id: CA8BB4727A47B4D09B4EE8969386B48A1A693C5C
 
+# Your snap should declare the corresponding plug and make the target "graphics"
 slots:
   graphics-core22:
     interface: content
     content: bins
     read: [.]
 
+# These layouts are only useful for the binaries shipped in this snap. To make
+# them usable for your own snap, you have to be a little bit hacky: either
+# follow what the dilyn-jellyfin snap does by pulling this content directly,
+# or use this snap as a stage-snap in your own snap and eschew the content
+# interface alltogether.
 layout:
   /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio:
     bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio
@@ -132,6 +138,10 @@ parts:
       - -usr/include/
       - -usr/share/man/
 
+  # This script provides a wrapper your consumer snap will use which will
+  # specify all of the important paths to utilize the libraries in this snap.
+  # Your snap will need to specify in its command-chain a wrapper script which
+  # calls this script to call your app's binary.
   mesa-core22:
     plugin: nil
     source: https://github.com/canonical/mesa-core22
