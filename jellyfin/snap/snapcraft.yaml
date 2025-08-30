@@ -33,13 +33,14 @@ package-repositories:
     key-id: CA8BB4727A47B4D09B4EE8969386B48A1A693C5C
 
 plugs:
+  # TBD. Requires permission from Store admins
   # home:
   #   read: all
   graphics-core22:
     interface: content
     target: graphics
     content: bins
-    # default-provider: dilyn-jellyfin-ffmpeg
+    default-provider: dilyn-jellyfin-ffmpeg
 
 layout:
   /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio:
