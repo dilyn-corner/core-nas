@@ -44,12 +44,12 @@ plugs:
     interface: content
     content: bins
     target: postgresql
-    # default-provider: dilyn-postgresql
+    default-provider: dilyn-postgresql
   graphics-core22:
     interface: content
     content: bins
     target: graphics
-    # default-provider: dilyn-jellyfin-ffmpeg
+    default-provider: dilyn-jellyfin-ffmpeg
 
 layout:
   /usr/share/libdrm/amdgpu.ids:
