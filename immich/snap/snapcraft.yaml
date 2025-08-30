@@ -27,7 +27,7 @@ description: |
   manage its own database as configured using the postgresql snap, and it should
   handle any graphical needs via the graphics libraries snap.
 
-grade: devel
+grade: stable
 confinement: strict
 
 assumes: [snapd2.68]
