@@ -13,6 +13,7 @@ description: |
   this snap should try and make use of the suggestions in the gpu-snap repository:
   https://github.com/canonical/gpu-snap
 
+grade: stable
 confinement: strict
 
 package-repositories:
