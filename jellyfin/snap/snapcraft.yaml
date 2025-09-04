@@ -41,7 +41,7 @@ plugs:
   graphics-core22:
     interface: content
     target: graphics
-    content: bins
+    content: graphics-libs
     default-provider: dilyn-jellyfin-ffmpeg
 
 layout:

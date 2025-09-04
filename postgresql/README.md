@@ -28,7 +28,7 @@ sufficient to declare the postgresql plug:
 ```yaml
 plugs:
   interface: content
-  content: bins
+  content: pg-content
   target: postgresql
   default-provider: dilyn-postgresql
 

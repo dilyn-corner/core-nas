@@ -56,7 +56,7 @@ system-usernames:
 slots:
   postgresql:
     interface: content
-    content: bins
+    content: pg-content
     read: [.]
 
 hooks:

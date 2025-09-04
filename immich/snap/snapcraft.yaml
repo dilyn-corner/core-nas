@@ -48,12 +48,12 @@ system-usernames:
 plugs:
   postgresql:
     interface: content
-    content: bins
+    content: pg-content
     target: postgresql
     default-provider: dilyn-postgresql
   graphics-core22:
     interface: content
-    content: bins
+    content: graphics-libs
     target: graphics
     default-provider: dilyn-jellyfin-ffmpeg
 

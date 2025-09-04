@@ -42,7 +42,7 @@ package-repositories:
 slots:
   graphics-core22:
     interface: content
-    content: bins
+    content: graphics-libs
     read: [.]
 
 # These layouts are only useful for the binaries shipped in this snap. To make
