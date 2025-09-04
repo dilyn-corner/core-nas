@@ -4,6 +4,6 @@ _port="$(snapctl get port)"
 
 [ -n "${_port}" ] || snapctl set port=6379
 
-sed -i -e "s/port .*/port $(snapctl get port)/"                       \
-       -e "s/pidfile .*/pidfile /tmp/valkey_$(snapctl get port).pid/" \
+sed -i -e "s|port .*|port $(snapctl get port)|"                       \
+       -e "s|pidfile .*|pidfile /tmp/valkey_$(snapctl get port).pid|" \
        "${SNAP_COMMON}/valkey.conf"
