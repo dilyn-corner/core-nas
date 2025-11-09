@@ -49,8 +49,8 @@ layout:
     bind: $SNAP/usr/share/fonts
   /usr/lib/jellyfin-ffmpeg:
     symlink: $SNAP/graphics/usr/lib/jellyfin-ffmpeg
-  /usr/lib/x86_64-linux-gnu/intel-opencl:
-    bind: $SNAP/graphics/usr/lib/x86_64-linux-gnu/intel-opencl
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl:
+    bind: $SNAP/graphics/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl
 
 apps:
   server:
