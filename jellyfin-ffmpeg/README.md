@@ -51,12 +51,12 @@ layout:
 And at first, snapd will mount nothing to `/etc/OpenCL` (as there is no
 `$SNAP/graphics/etc/OpenCL` to mount). However, after connecting the
 graphics-core22 interface between your consumer and this provider and rebooting
-your system, there *will* be content in `$SNAP/graphics/etc/OpenCL`, and
-something will successfully appear in *your* snap's `/etc/OpenCL`. Hacky,
-effective! It isn't clear how long this workaround will work for. In an ideal
-world, snapd would enable this kind of functionality explicitly, by perhaps
-allowing layout sources to come from content interface provider snaps. Until
-then, this trick works!
+your system (or disabling and enabling your consumer snap), there *will* be
+content in `$SNAP/graphics/etc/OpenCL`, and something will successfully appear
+in *your* snap's `/etc/OpenCL`. Hacky, effective! It isn't clear how long
+this workaround will work for. In an ideal world, snapd would enable this kind
+of functionality explicitly, by perhaps allowing layout sources to come from
+content interface provider snaps. Until then, this trick works!
 
 Finally, some tweaks have to be made to the execution environment of your snap.
 Some paths must be set ahead of execution so that the app can successfully
