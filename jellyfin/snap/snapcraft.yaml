@@ -45,18 +45,18 @@ plugs:
     default-provider: dilyn-jellyfin-ffmpeg
 
 layout:
-  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio:
-    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio
-  /usr/share/fonts:
-    bind: $SNAP/usr/share/fonts
   /etc/fonts:
     bind: $SNAP/etc/fonts
+  /etc/OpenCL:
+    symlink: $SNAP/graphics/etc/OpenCL
   /etc/igfx_user_feature_next.txt:
-    bind-file: $SNAP_DATA/igfx_user_feature_next.txt
-  /usr/lib/jellyfin-ffmpeg/share/libdrm/amdgpu.ids:
-    bind-file: $SNAP/graphics/usr/lib/jellyfin-ffmpeg/share/libdrm/amdgpu.ids
-  /usr/lib/jellyfin-ffmpeg/lib/dri:
-    bind: $SNAP/graphics/usr/lib/jellyfin-ffmpeg/lib/dri
+    symlink: $SNAP_DATA/igfx_user_feature_next.txt
+  /usr/share/fonts:
+    bind: $SNAP/usr/share/fonts
+  /usr/lib/jellyfin-ffmpeg:
+    symlink: $SNAP/graphics/usr/lib/jellyfin-ffmpeg
+  /usr/lib/x86_64-linux-gnu/intel-opencl:
+    bind: $SNAP/graphics/usr/lib/x86_64-linux-gnu/intel-opencl
 
 apps:
   server:
