@@ -66,17 +66,12 @@ apps:
     install-mode: disable
     plugs: [firewall-control, graphics-core22, home, mount-observe, network, network-bind, opengl, removable-media]
     environment:
-      PATH:                ${SNAP}/graphics/usr/bin:${PATH}
-      JELLYFIN_LOG_DIR:    ${SNAP_DATA}/logs
-      JELLYFIN_DATA_DIR:   ${SNAP_COMMON}/data
-      JELLYFIN_CACHE_DIR:  ${SNAP_COMMON}/cache
+      PATH: ${SNAP}/graphics/usr/bin:${PATH}
+      JELLYFIN_LOG_DIR: ${SNAP_DATA}/logs
+      JELLYFIN_DATA_DIR: ${SNAP_COMMON}/data
+      JELLYFIN_CACHE_DIR: ${SNAP_COMMON}/cache
       JELLYFIN_CONFIG_DIR: ${SNAP_COMMON}/config
-      JELLYFIN_WEB_DIR:    ${SNAP}/usr/share/jellyfin/web
-      LD_LIBRARY_PATH:     ${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib:${SNAP}/graphics/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${SNAP}/graphics/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/vdpau:${LD_LIBRARY_PATH}
-      LIBGL_DRIVERS_PATH:  ${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib:${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib/dri:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/dri:${LIBGL_DRIVERS_PATH}
-      LIBVA_DRIVERS_PATH:  ${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib:${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib/dri:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/dri:${LIBVA_DRIVERS_PATH}
-      # Enable OpenCL on older AMD cards
-      ROC_ENABLE_PRE_VEGA: "1"
+      JELLYFIN_WEB_DIR: ${SNAP}/usr/share/jellyfin/web
 
 parts:
   jellyfin:
@@ -88,16 +83,16 @@ parts:
       craftctl set version="$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/jellyfin-server"_*.deb Version)"
 
   # Remove any overlapping binaries provided by our graphics snap
-  # Not currently perfectly one-to-one, but it may just be "good enough"
   graphics-core22:
     after: [jellyfin]
     plugin: dump
-    source: https://github.com/canonical/gpu-snap
-    source-depth: 1
-    source-type: git
-    source-branch: main
-    stage:
-      - bin/graphics-core22-wrapper
+    source: src/
+    organize:
+      graphics-core22-wrapper: bin/graphics-core22-wrapper
     override-prime: |
       craftctl default
-      "${CRAFT_PART_SRC}/bin/graphics-core22-cleanup" mesa-core22 nvidia-core22
+
+      find /snap/dilyn-jellyfin-ffmpeg/current/usr/lib -type f -o -type l |\
+        while read -r file; do
+          rm -f "${CRAFT_PRIME}/${file##*/current/}"
+        done
