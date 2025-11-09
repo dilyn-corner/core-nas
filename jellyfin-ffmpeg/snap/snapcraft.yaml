@@ -90,8 +90,6 @@ apps:
 parts:
   jellyfin-ffmpeg:
     plugin: nil
-    # RUNPATH is hard-coded for our libraries but we want them accessible from anywhere
-    build-packages: [chrpath]
     stage-packages:
       - clinfo
       - jellyfin-ffmpeg7
@@ -110,26 +108,18 @@ parts:
     organize:
       usr/lib/jellyfin-ffmpeg/ffmpeg:  usr/bin/ffmpeg
       usr/lib/jellyfin-ffmpeg/ffprobe: usr/bin/ffprobe
-      usr/lib/jellyfin-ffmpeg/vainfo:  usr/bin/vainfo
-    override-stage: |
-      craftctl default
-
-      # Remove fully qualified paths so that library search paths are respected
-      sed -i 's|/usr/lib/jellyfin-ffmpeg/lib/||' \
-        "${CRAFT_STAGE}/usr/lib/jellyfin-ffmpeg/share/vulkan/"*/*.json
-
-      chrpath -d "${CRAFT_STAGE}/usr/bin/ffmpeg"  \
-                 "${CRAFT_STAGE}/usr/bin/ffprobe" \
-                 "${CRAFT_STAGE}/usr/bin/vainfo"
-
-      find "${CRAFT_PART_INSTALL}/opt/rocm-6.4.3/lib" \
-           "${CRAFT_PART_INSTALL}/usr/lib/jellyfin-ffmpeg" -type f | while read -r file; do
-        # Failing is fine
-        chrpath -d "$file" || continue
-      done
+      usr/lib/jellyfin-ffmpeg/vainfo: usr/bin/vainfo
     stage:
+      - -etc/fonts/
       - -usr/include/
+      - -usr/share/X11/
+      - -usr/share/bug/
+      - -usr/share/doc-base/
+      - -usr/share/fonts/
+      - -usr/share/lintian/
+      - -usr/share/locale/
       - -usr/share/man/
+      - -usr/share/xml/
 
   # This script provides a wrapper your consumer snap will use which will
   # specify all of the important paths to utilize the libraries in this snap.
