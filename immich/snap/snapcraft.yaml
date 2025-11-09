@@ -58,8 +58,18 @@ plugs:
     default-provider: dilyn-jellyfin-ffmpeg
 
 layout:
+  /etc/fonts:
+    bind: $SNAP/etc/fonts
+  /etc/OpenCL:
+    symlink: $SNAP/graphics/etc/OpenCL
+  /usr/share/fonts:
+    bind: $SNAP/usr/share/fonts
+  /usr/lib/jellyfin-ffmpeg:
+    bind: $SNAP/graphics/usr/lib/jellyfin-ffmpeg
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl:
+    bind: $SNAP/graphics/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl
   /usr/share/libdrm/amdgpu.ids:
-    bind-file: $SNAP/usr/share/libdrm/amdgpu.ids
+    bind-file: $SNAP/graphics/usr/lib/jellyfin-ffmpeg/share/libdrm/amdgpu.ids
 
 hooks:
   connect-plug-postgresql:
