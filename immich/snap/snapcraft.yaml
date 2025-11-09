@@ -237,15 +237,15 @@ parts:
     source-type: git
     build-packages: [jq]
     override-stage: |
+      jq -s '.' "${CRAFT_PART_SRC}/server/sources/"*.json  > /tmp/sources.json
       jq -s '.' "${CRAFT_PART_SRC}/server/packages/"*.json > /tmp/packages.json
-      jq -s '.' "${CRAFT_PART_SRC}/server/sources/"*.json > /tmp/sources.json
 
-      jq -n --slurpfile sources /tmp/sources.json --slurpfile packages /tmp/packages.json \
+      jq -n \
+        --slurpfile sources /tmp/sources.json            \
+        --slurpfile packages /tmp/packages.json          \
         '{sources: $sources[0], packages: $packages[0]}' \
         > "${CRAFT_STAGE}/usr/lib/immich/build/build-lock.json"
       chmod 644 "${CRAFT_STAGE}/usr/lib/immich/build/build-lock.json"
-
-      craftctl default
 
   geonames:
     plugin: nil
