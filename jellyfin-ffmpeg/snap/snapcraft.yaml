@@ -22,6 +22,10 @@ description: |
 grade: stable
 confinement: strict
 
+architectures:
+  - amd64
+  - arm64
+
 package-repositories:
   - type: apt
     url: https://repo.jellyfin.org/ubuntu
