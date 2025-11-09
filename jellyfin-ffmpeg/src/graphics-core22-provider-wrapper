@@ -1,0 +1,42 @@
+#!/bin/sh -ex
+
+# jellyfin-ffmpeg only supports amd64 and arm64
+# _arch is set during build
+
+SELF="$( cd -- "$(dirname "$0")/.." ; pwd -P )/usr"
+
+reglib=${SELF}/lib
+regvk=${SELF}/usr/share/vulkan
+jellylib=${SELF}/lib/jellyfin-ffmpeg/lib
+jellyvk=${SELF}/lib/jellyfin-ffmpeg/share
+
+LD_LIBRARY_PATH=${jellylib}:${jellylib}/dri:${reglib}:${reglib}/_arch:${reglib}/_arch/dri:${LD_LIBRARY_PATH}
+LIBGL_DRIVERS_PATH=${jellylib}/dri:${LIBGL_DRIVERS_PATH:+$LIBGL_DRIVERS_PATH:}${reglib}/_arch/dri
+LIBVA_DRIVERS_PATH=${jellylib}/dri:${LIBVA_DRIVERS_PATH:+$LIBVA_DRIVERS_PATH:}${reglib}/_arch/dri
+
+XDG_DATA_DIRS="${jellyvk}:${XDG_DATA_DIRS:+$XDG_DATA_DIRS:}${SELF}/share"
+VK_LAYER_PATH=${jellyvk}/vulkan/explicit_layer.d:${VK_LAYER_PATH:+$VK_LAYER_PATH:}${regvk}/implicit_layer.d:${regvk}/explicit_layer.d
+
+# If the host provides some things, use them. These are in the default
+# LD_LIBRARY_PATH, but in case the snap dropped it inadvertently.
+if [ -d "/var/lib/snapd/lib" ]; then
+  XDG_DATA_DIRS=${XDG_DATA_DIRS:+$XDG_DATA_DIRS:}/var/lib/snapd/lib
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}/var/lib/snapd/lib/gl
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}/var/lib/snapd/lib/gl32
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}/var/lib/snapd/lib/gl/vdpau
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}/var/lib/snapd/lib/gl32/vdpau
+fi
+
+export XDG_DATA_DIRS
+export VK_LAYER_PATH
+export LD_LIBRARY_PATH
+export LIBGL_DRIVERS_PATH
+export LIBVA_DRIVERS_PATH
+
+# Some Intel platforms will fail to register on certain kernel versions.
+# At least 6.8 is effected.
+# https://github.com/intel/compute-runtime/issues/710#issuecomment-2002646557
+export NEOReadDebugKeys=1
+export OverrideGpuAddressSpace=48
+
+exec "$@"

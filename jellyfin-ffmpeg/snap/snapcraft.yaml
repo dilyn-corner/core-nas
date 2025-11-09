@@ -150,20 +150,13 @@ parts:
   # Your snap will need to specify in its command-chain a wrapper script which
   # calls this script to call your app's binary.
   mesa-core22:
-    plugin: nil
-    source: https://github.com/canonical/mesa-core22
-    source-depth: 1
-    source-type: git
-    source-branch: main
-    override-pull: |
-      craftctl default
-
-      patch -p1 < "${CRAFT_PROJECT_DIR}/patches/jellyfin-paths.patch"
-    override-build: |
-      sed "s/@ARCH_TRIPLETS@/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/" \
-        "${CRAFT_PART_SRC}/scripts/bin/graphics-core22-provider-wrapper.in" \
-        > "${CRAFT_PART_INSTALL}/graphics-core22-provider-wrapper"
-
-      chmod 555 "${CRAFT_PART_INSTALL}/graphics-core22-provider-wrapper"
+    after: [jellyfin-ffmpeg]
+    plugin: dump
+    source: src/
     organize:
       graphics-core22-provider-wrapper: bin/
+    override-prime: |
+      craftctl default
+
+      sed -i "s/_arch/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/g" \
+        "${CRAFT_PRIME}/bin/graphics-core22-provider-wrapper"
