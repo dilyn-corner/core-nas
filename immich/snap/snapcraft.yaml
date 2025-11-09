@@ -123,18 +123,22 @@ apps:
     plugs: *_pgplugs
     environment: *_pgenv
 
-  # TODO: impl
-  # ml:
-  #   command: usr/bin/machine-learning.sh
-  #   daemon: simple
-  #   install-mode: disable
-  #   environment:
-  #     PYTHONUNBUFFERED:        1
-  #     PYTHONDONTWRITEBYTECODE: 1
-  #     NODE_ENV:           production
-  #     VIRTUAL_ENV:        "$SNAP/opt/immich-machine-learning/venv"
-  #     IMMICH_BUILD_DATA:  "$SNAP/usr/lib/immich/build"
-  #     TRANSFORMERS_CACHE: /tmp/cache
+  ml:
+    command: usr/bin/machine-learning.sh
+    command-chain: [usr/bin/graphics-core22-wrapper]
+    daemon: simple
+    install-mode: disable
+    plugs: [network, network-bind]
+    environment:
+      LD_PRELOAD: "${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/libmimalloc.so.2"
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      NODE_ENV: production
+      VIRTUAL_ENV: "$SNAP/opt/immich-machine-learning/venv"
+      IMMICH_BUILD_DATA: "$SNAP/usr/lib/immich/build"
+      TRANSFORMERS_CACHE: /tmp/cache
+      PATH: ${SNAP}/postgresql/usr/lib/postgresql/14/bin:${SNAP}/graphics/bin:${SNAP}/graphics/usr/bin:${PATH}
+      LD_LIBRARY_PATH: ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}
 
 parts:
   scripts:
@@ -148,7 +152,7 @@ parts:
     source: https://github.com/immich-app/immich
     source-depth: 1
     source-type: git
-    source-tag: v1.139.4
+    source-tag: v2.2.3
     build-snaps: [node/22/stable]
     stage-snaps: [node/22/stable]
     build-packages:
@@ -173,18 +177,23 @@ parts:
       - liblcms2-dev
       - libvips-dev
     stage-packages: [libvips42, perl]
+    build-environment:
+      - COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+      - CI: "1"
     override-pull: |
       craftctl default
 
+      patch -p1 < "${CRAFT_PROJECT_DIR}/patches/pgdump.patch"
+
       craftctl set version=$(git describe --tags)
 
-      # Get pnpm real quick...
-      npm install -g pnpm@latest-10
+      # Fetch pnpm for building
+      npm install --global corepack@latest
+      corepack enable pnpm
 
-      # Eliminate a racey failure that pops up on fast store, virtiofs, etc
-      # We delete here and again in the build because if a build fails, the
-      # directory may still be present
-      rm -rf ~/.local/share/pnpm/store
+      # Certain environments, like ZFS, have an issue this works around
+      # https://github.com/pnpm/pnpm/issues/7024#issuecomment-1825412952
+      pnpm fetch --package-import-method=hardlink
     override-build: |
       install -Dm644 LICENSE \
         "${CRAFT_PART_INSTALL}/usr/lib/immich/app/LICENSE"
@@ -195,38 +204,66 @@ parts:
                "${CRAFT_PART_INSTALL}/usr/lib/immich/build" \
                "${CRAFT_PART_INSTALL}/usr/lib/immich/app/server"
 
+      pnpm install \
+        --filter immich \
+        --frozen-lockfile --offline
+
       # Server
-      pnpm fetch
-      pnpm install --filter immich --frozen-lockfile --offline
-      pnpm --filter immich --frozen-lockfile build
-      pnpm --filter immich --frozen-lockfile --prod deploy --legacy output/server-pruned
+      cd "${CRAFT_PART_BUILD}/server"
+      pnpm exec nest build --type-check
 
-      cp -rfT output/server-pruned "${CRAFT_PART_INSTALL}/usr/lib/immich/app/server"
+      pnpm \
+        --filter immich \
+        --frozen-lockfile build
 
-      # Eliminate a racey failure that pops up on fast store, virtiofs, etc
-      rm -rf ~/.local/share/pnpm/store
+      pnpm \
+        --filter immich \
+        --frozen-lockfile \
+        --prod deploy \
+        "${CRAFT_PART_INSTALL}/usr/lib/immich/app/server"
+
+      # TOOD: filter this out via stage
+      rm -rf ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/bin            \
+             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/test           \
+             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/.nvmrc         \
+             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/Dockerfile     \
+             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/.prettierrc    \
+             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/nest-cli.json  \
+             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/pnpm-lock.yaml \
+             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/.prettierignore
 
       # SDK and web frontend
-      pnpm --filter @immich/sdk --filter immich-web --frozen-lockfile --force install
-      pnpm --filter @immich/sdk --filter immich-web build
+      # cd "${CRAFT_PART_BUILD}/web"
+
+      pnpm \
+        --filter @immich/sdk \
+        --filter immich-web \
+        --frozen-lockfile \
+        --package-import-method=hardlink \
+        --force install
+
+      pnpm \
+        --filter @immich/sdk \
+        --filter immich-web build
 
       mkdir -p "${CRAFT_PART_INSTALL}/usr/lib/immich/build"
-      cp -rf web/build "${CRAFT_PART_INSTALL}/usr/lib/immich/build/www"
+      cp -rf "${CRAFT_PART_BUILD}/web/build" "${CRAFT_PART_INSTALL}/usr/lib/immich/build/www"
 
-      # CLI
-      pnpm install --filter @immich/cli --frozen-lockfile
-      pnpm --filter @immich/cli --prod --no-optional deploy output/cli-pruned
+  machine-learning:
+    plugin: uv
+    source: https://github.com/immich-app/immich
+    source-depth: 1
+    source-type: git
+    source-tag: v2.1.0
+    source-subdir: machine-learning
+    uv-extras: [cpu]
+    build-snaps: [astral-uv]
+    stage-packages: [libmimalloc2.0]
+    override-build: |
+      craftctl default
 
-      cp -rfT output/cli-pruned "${CRAFT_PART_INSTALL}/usr/lib/immich/cli"
-
-      ln -sf ../lib/immich/cli/bin/immich "${CRAFT_PART_INSTALL}/usr/bin/immich"
-
-    stage:
-      - -usr/lib/immich/app/server/node_modules/.pnpm/bcrypt@6.0.0/node_modules/bcrypt/prebuilds/linux-arm/bcrypt.musl.node
-      - -usr/lib/immich/app/server/node_modules/.pnpm/bcrypt@6.0.0/node_modules/bcrypt/prebuilds/linux-arm/bcrypt.glibc.node
-      - -usr/lib/immich/app/server/node_modules/.pnpm/bcrypt@6.0.0/node_modules/bcrypt/prebuilds/linux-arm64/bcrypt.glibc.node
-      - -usr/lib/immich/app/server/node_modules/.pnpm/@msgpackr-extract+msgpackr-extract-linux-x64@3.0.3/node_modules/@msgpackr-extract/mhgpackr-extract-linux-x64/node.napi.musl.node
-      - -usr/lib/immich/app/server/node_modules/.pnpm/@msgpackr-extract+msgpackr-extract-linux-x64@3.0.3/node_modules/@msgpackr-extract/msgpackr-extract-linux-x64/node.abi115.musl.node
+      mkdir -p "${CRAFT_PART_INSTALL}/etc"
+      cp -rf machine-learning/immich_ml/log_conf.json "${CRAFT_PART_INSTALL}/etc"
 
   # Generate build-lock.json
   build-lock:
