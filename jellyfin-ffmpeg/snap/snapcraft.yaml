@@ -34,13 +34,19 @@ package-repositories:
     components: [main]
     architectures: [$CRAFT_ARCH_BUILD_FOR]
     key-id: 4918AABC486CA052358D778D49023CD01DE21A7B
-  - type: apt
-    url: https://repo.radeon.com/rocm/apt/debian
-    priority: prefer
-    suites: [jammy]
-    components: [main]
-    architectures: [$CRAFT_ARCH_BUILD_FOR]
-    key-id: CA8BB4727A47B4D09B4EE8969386B48A1A693C5C
+  # To what extent do we want ROCm versus just VA-API? ROCm adds 500MB
+  # - type: apt
+  #   url: https://repo.radeon.com/rocm/apt/debian
+  #   priority: prefer
+  #   suites: [jammy]
+  #   components: [main]
+  #   architectures: [$CRAFT_ARCH_BUILD_FOR]
+  #   key-id: CA8BB4727A47B4D09B4EE8969386B48A1A693C5C
+
+# All of the libraries in this snap may well be unused; these are meant entirely
+# for consumption. Any binaries here which use them is purely incidental.
+lint:
+  ignore: [library]
 
 # Your snap should declare the corresponding plug and make the target "graphics"
 slots:
@@ -92,21 +98,16 @@ parts:
     plugin: nil
     stage-packages:
       - clinfo
+      - intel-opencl-icd
       - jellyfin-ffmpeg7
-      - libavcodec-extra58
-      - libavcodec58
       - libdrm-common
       - va-driver-all
       - vulkan-tools
-      - on amd64:
-        - intel-opencl-icd
-        - libquadmath0
-        - rocm-opencl-runtime
     override-build: |
       craftctl default
       craftctl set version="$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/jellyfin-ffmpeg7_"*.deb Version)"
     organize:
-      usr/lib/jellyfin-ffmpeg/ffmpeg:  usr/bin/ffmpeg
+      usr/lib/jellyfin-ffmpeg/ffmpeg: usr/bin/ffmpeg
       usr/lib/jellyfin-ffmpeg/ffprobe: usr/bin/ffprobe
       usr/lib/jellyfin-ffmpeg/vainfo: usr/bin/vainfo
     stage:
