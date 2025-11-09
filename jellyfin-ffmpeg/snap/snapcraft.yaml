@@ -51,28 +51,18 @@ slots:
 # or use this snap as a stage-snap in your own snap and eschew the content
 # interface alltogether.
 layout:
-  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio:
-    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio
-  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/dri:
-    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/dri
-  /usr/share/zoneinfo-icu:
-    bind: $SNAP/usr/share/zoneinfo-icu
-  /usr/share/libdrm/amdgpu.ids:
-    bind-file: $SNAP/usr/share/libdrm/amdgpu.ids
-  /usr/share/fonts:
-    bind: $SNAP/usr/share/fonts
-  /etc/fonts:
-    bind: $SNAP/etc/fonts
-  /etc/igfx_user_feature_next.txt:
-    bind-file: $SNAP_DATA/igfx_user_feature_next.txt
-  /etc/vdpau_wrapper.cfg:
-    bind-file: $SNAP/etc/vdpau_wrapper.cfg
   /etc/OpenCL:
     bind: $SNAP/etc/OpenCL
+  /usr/share/libdrm:
+    bind: $SNAP/usr/share/libdrm
+  /usr/share/zoneinfo-icu:
+    bind: $SNAP/usr/share/zoneinfo-icu
+  /usr/lib/jellyfin-ffmpeg:
+    bind: $SNAP/usr/lib/jellyfin-ffmpeg
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/dri:
+    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/dri
   /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl:
     bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl
-  /opt:
-    bind: $SNAP/opt
 
 apps:
   vainfo:
