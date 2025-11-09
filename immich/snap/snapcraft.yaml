@@ -92,25 +92,19 @@ apps:
     # Any user-configurable environment variables can be set via snap
     # configuration and will be set to expected defaults in immich-server.sh
     environment:
-      PATH:               ${SNAP}/postgresql/usr/lib/postgresql/14/bin:${SNAP}/graphics/bin:${PATH}
-      PERL5LIB:           ${SNAP}/usr/share/perl5:${SNAP}/usr/share/perl:${PERL5LIB}
-      LD_LIBRARY_PATH:    ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib:${SNAP}/graphics/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${SNAP}/graphics/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/vdpau:${LD_LIBRARY_PATH}
-      LIBGL_DRIVERS_PATH: ${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib:${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/dri:${SNAP}/graphics/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/dri:${LIBGL_DRIVERS_PATH}
-      LIBVA_DRIVERS_PATH: ${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/lib:${SNAP}/graphics/usr/lib/jellyfin-ffmpeg/dri:${SNAP}/graphics/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/dri:${LIBVA_DRIVERS_PATH}
-      DB_PORT:                           5433
-      DB_HOSTNAME:                       127.0.0.1
-      DB_USERNAME:                       postgres
-      DB_PASSWORD:                       postgres
-      DB_DATABASE_NAME:                  immich
-      REDIS_PORT:                        6379
-      REDIS_HOSTNAME:                    127.0.0.1
-      NODE_ENV:                          production
-      IMMICH_ENV:                        production
-      IMMICH_PORT:                       3001
-      IMMICH_API_METRICS_PORT:           8081
-      IMMICH_MICROSERVICES_METRICS_PORT: 8082
-      IMMICH_MEDIA_LOCATION:             ${SNAP_COMMON}/upload
-      IMMICH_BUILD_DATA:                 ${SNAP}/usr/lib/immich/build
+      DB_PORT: "5433"
+      DB_HOSTNAME: 127.0.0.1
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE_NAME: immich
+      REDIS_PORT: "6379"
+      REDIS_HOSTNAME: 127.0.0.1
+      NODE_ENV: production
+      IMMICH_ENV: production
+      IMMICH_BUILD_DATA: ${SNAP}/usr/lib/immich/build
+      PATH: ${SNAP}/postgresql/usr/lib/postgresql/14/bin:${SNAP}/graphics/bin:${SNAP}/graphics/usr/bin:${PATH}
+      PERL5LIB: ${SNAP}/usr/share/perl5:${SNAP}/usr/share/perl:${PERL5LIB}
+      LD_LIBRARY_PATH: ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}
 
   postgresql:
     command: usr/bin/postgresql.sh start
