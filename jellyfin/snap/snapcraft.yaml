@@ -27,12 +27,6 @@ package-repositories:
     components: [main]
     architectures: [$CRAFT_ARCH_BUILD_FOR]
     key-id: 4918AABC486CA052358D778D49023CD01DE21A7B
-  - type: apt
-    url: https://repo.radeon.com/rocm/apt/debian
-    suites: [jammy]
-    components: [main]
-    architectures: [$CRAFT_ARCH_BUILD_FOR]
-    key-id: CA8BB4727A47B4D09B4EE8969386B48A1A693C5C
 
 plugs:
   # TBD. Requires permission from Store admins
