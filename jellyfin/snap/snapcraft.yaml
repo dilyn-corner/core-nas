@@ -7,7 +7,7 @@ website: https://jellyfin.org
 contact: dilyn.corner@tutanota.com
 issues: https://github.com/dilyn-corner/core-nas/issues
 source-code: https://github.com/dilyn-corner/core-nas/tree/22/jellyfin
-summary:  "Jellyfin: The Free Software Media System"
+summary: "Jellyfin: The Free Software Media System"
 description: |
   Jellyfin is the volunteer-built media solution that puts you in control of
   your media. Stream to any device from your own server, with no strings
@@ -64,7 +64,15 @@ apps:
     command-chain: [bin/graphics-core22-wrapper]
     daemon: simple
     install-mode: disable
-    plugs: [firewall-control, graphics-core22, home, mount-observe, network, network-bind, opengl, removable-media]
+    plugs:
+      - firewall-control
+      - graphics-core22
+      - home
+      - mount-observe
+      - network
+      - network-bind
+      - opengl
+      - removable-media
     environment:
       PATH: ${SNAP}/graphics/usr/bin:${PATH}
       JELLYFIN_LOG_DIR: ${SNAP_DATA}/logs
