@@ -84,7 +84,7 @@ apps:
   server:
     after: [postgresql]
     command: usr/bin/immich-server.sh
-    command-chain: [bin/graphics-core22-wrapper]
+    command-chain: [usr/bin/graphics-core22-wrapper]
     daemon: simple
     install-mode: disable
     plugs: [graphics-core22, network, network-bind, postgresql, mount-observe, opengl, removable-media]
@@ -141,12 +141,6 @@ apps:
       LD_LIBRARY_PATH: ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}
 
 parts:
-  scripts:
-    source: src/
-    plugin: dump
-    organize:
-      '*': usr/bin/
-
   immich:
     plugin: nil
     source: https://github.com/immich-app/immich
@@ -303,17 +297,17 @@ parts:
 
       date --iso-8601=seconds | tr -d "\n" > "${CRAFT_PART_INSTALL}/usr/lib/immich/build/geodata/geodata-date.txt"
 
-  # Remove any overlapping binaries provided by our graphics snap
-  # Not currently perfectly one-to-one, but it may just be "good enough"
-  graphics-core22:
-    after: [immich]
+  scripts:
+    after: [build-lock, geonames, immich, machine-learning]
     plugin: dump
-    source: https://github.com/canonical/gpu-snap
-    source-depth: 1
-    source-type: git
-    source-branch: main
-    stage:
-      - bin/graphics-core22-wrapper
+    source: src/
+    organize:
+      "*": usr/bin/
+    # Remove any overlapping binaries provided by our graphics snap
     override-prime: |
       craftctl default
-      "${CRAFT_PART_SRC}/bin/graphics-core22-cleanup" mesa-core22 nvidia-core22
+
+      find /snap/dilyn-jellyfin-ffmpeg/current/usr/lib -type f -o -type l |\
+        while read -r file; do
+          rm -f "${CRAFT_PRIME}/${file##*/current/}"
+        done

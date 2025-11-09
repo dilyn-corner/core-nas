@@ -1,8 +1,5 @@
 #!/bin/sh -eux
 
-# app.main:app
-# uvicorn.workers.UvicornWorker
-
 gunicorn immich_ml.main:app                           \
   --log-config-json "${SNAP}/etc/log_conf.json"       \
   --worker-class immich_ml.config.CustomUvicornWorker \
