@@ -75,7 +75,7 @@ hooks:
   connect-plug-postgresql:
     plugs: &_pgplugs [network, network-bind, postgresql]
     environment: &_pgenv
-      PGDATA:     ${SNAP_COMMON}/postgresql/database
+      PGDATA: ${SNAP_COMMON}/postgresql/database
       PGPASSFILE: ${SNAP_COMMON}/postgresql/.pgpass
       PATH: ${SNAP}/postgresql/usr/lib/postgresql/14/bin:${PATH}
       LD_LIBRARY_PATH: ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}
@@ -87,7 +87,14 @@ apps:
     command-chain: [usr/bin/graphics-core22-wrapper]
     daemon: simple
     install-mode: disable
-    plugs: [graphics-core22, network, network-bind, postgresql, mount-observe, opengl, removable-media]
+    plugs:
+      - graphics-core22
+      - network
+      - network-bind
+      - postgresql
+      - mount-observe
+      - opengl
+      - removable-media
     # Documentation for all the supported env variables available at https://immich.app/docs/install/environment-variables
     # Any user-configurable environment variables can be set via snap
     # configuration and will be set to expected defaults in immich-server.sh
