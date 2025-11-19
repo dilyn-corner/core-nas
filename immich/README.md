@@ -21,7 +21,7 @@ can be provided by either a system package or a snap. This snap uses [dilyn-post
 and [dilyn-valkey](../valkey) out of the box, and one could give [caddy](https://snapcraft.io/caddy)
 a try to make immich viewable on the broader network :)
 
-The [graphics-core22](https://canonical.com/mir/docs/the-graphics-core22-snap-interface)
+The [gpu-2404](https://canonical.com/mir/docs/the-gpu-2404-snap-interface)
 is meant for some provider snap to provide access to the relevant binaries,
 specifically for things like machine learning and transcoding. These features
 are currently not implemented or tested, but the immich server still requires
@@ -37,4 +37,7 @@ possible to use this snap with a host-installed postgresql however.
 
 ## Usage
 
-The web UI will be available at the default Immich address <http://localhost:3000>.
+The web UI will be available at the default Immich address <http://localhost:3001>.
+
+Currently, the UI is broken! :D You can get there and "create an account", but
+if you attempt to login nothing will load. This is being investigated, kind of.

@@ -1,6 +1,6 @@
 name: dilyn-postgresql
 adopt-info: postgresql
-base: core22
+base: core24
 icon: snap/gui/icon.png
 license: "CC-BY-NC-SA-4.0 AND BSD-3-Clause AND GPL-3.0-or-later"
 website: https://postgresql.org
@@ -37,7 +37,7 @@ assumes: [snapd2.68]
 package-repositories:
   - type: apt
     url: https://apt.postgresql.org/pub/repos/apt
-    suites: [jammy-pgdg]
+    suites: [noble-pgdg]
     components: [main]
     key-id: B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
     architectures: [$CRAFT_ARCH_BUILD_FOR]
@@ -63,9 +63,9 @@ hooks:
   install:
     plugs: &_plugs [network, network-bind]
     environment: &_env
-      PATH:            "${SNAP}/usr/lib/postgresql/14/bin:${PATH}"
+      PATH: "${SNAP}/usr/lib/postgresql/16/bin:${PATH}"
       LD_LIBRARY_PATH: "${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}"
-      PERL5LIB:        "${PERL5LIB}:${SNAP}/usr/share/perl5:${SNAP}/usr/share/perl"
+      PERL5LIB: "${PERL5LIB}:${SNAP}/usr/share/perl5:${SNAP}/usr/share/perl"
 
 apps:
   # This service manages postgres operations.
@@ -96,16 +96,17 @@ parts:
   postgresql:
     plugin: dump
     source: src/
-    stage-packages: [perl, postgresql=14+238]
+    stage-packages:
+      [perl, postgresql=16+257build1.1]
       # For landscape. Ideally landscape (as a snap) would ship these. We need
-      # the extension control file bu that's not in the normal search path and
+      # the extension control file but that's not in the normal search path and
       # not modifiable until postgresql 18:
-  # https://github.com/postgres/postgres/commit/4f7f7b0375854e2f89876473405a8f21c95012af
-      # There's no good reason it should be here and not with landscape;
-      # something to experiment with
-      # - postgresql-14-debversion
-      # - postgresql-plpython3-14
-      # - postgresql-contrib
+    # https://github.com/postgres/postgres/commit/4f7f7b0375854e2f89876473405a8f21c95012af
+    # There's no good reason it should be here and not with landscape;
+    # something to experiment with
+    # - postgresql-14-debversion
+    # - postgresql-plpython3-14
+    # - postgresql-contrib
     override-build: |
       craftctl default
 
@@ -121,5 +122,5 @@ parts:
   # This postgresql should be 14
   vchord:
     plugin: dump
-    source: https://github.com/tensorchord/VectorChord/releases/download/0.4.3/postgresql-14-vchord_0.4.3-1_${CRAFT_ARCH_BUILD_FOR}.deb
-    stage-packages: [postgresql-14-pgvector]
+    source: https://github.com/tensorchord/VectorChord/releases/download/0.4.3/postgresql-16-vchord_0.4.3-1_${CRAFT_ARCH_BUILD_FOR}.deb
+    stage-packages: [postgresql-16-pgvector]

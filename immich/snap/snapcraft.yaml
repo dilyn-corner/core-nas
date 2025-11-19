@@ -1,6 +1,6 @@
 name: dilyn-immich
 adopt-info: immich
-base: core22
+base: core24
 icon: snap/gui/icon.png
 license: "CC-BY-NC-SA-4.0 AND AGPL-3.0"
 website: https://immich.app
@@ -51,7 +51,7 @@ plugs:
     content: pg-content
     target: postgresql
     default-provider: dilyn-postgresql
-  graphics-core22:
+  gpu-2404:
     interface: content
     content: graphics-libs
     target: graphics
@@ -72,8 +72,8 @@ layout:
     symlink: $SNAP/graphics/usr/lib/jellyfin-ffmpeg
   /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl:
     bind: $SNAP/graphics/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl
-  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/ImageMagick-6.9.11:
-    symlink: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/ImageMagick-6.9.11
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/ImageMagick-6.9.12:
+    symlink: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/ImageMagick-6.9.12
 
 hooks:
   connect-plug-postgresql:
@@ -81,18 +81,18 @@ hooks:
     environment: &_pgenv
       PGDATA: ${SNAP_COMMON}/postgresql/database
       PGPASSFILE: ${SNAP_COMMON}/postgresql/.pgpass
-      PATH: ${SNAP}/postgresql/usr/lib/postgresql/14/bin:${PATH}
+      PATH: ${SNAP}/postgresql/usr/lib/postgresql/16/bin:${PATH}
       LD_LIBRARY_PATH: ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}
 
 apps:
   server:
     after: [postgresql]
     command: usr/bin/immich-server.sh
-    command-chain: [usr/bin/graphics-core22-wrapper]
+    command-chain: [usr/bin/gpu-2404-wrapper]
     daemon: simple
     install-mode: disable
     plugs:
-      - graphics-core22
+      - gpu-2404
       - network
       - network-bind
       - mount-observe
@@ -113,7 +113,7 @@ apps:
       NODE_ENV: production
       IMMICH_ENV: production
       IMMICH_BUILD_DATA: ${SNAP}/usr/lib/immich/build
-      PATH: ${SNAP}/postgresql/usr/lib/postgresql/14/bin:${SNAP}/graphics/bin:${SNAP}/graphics/usr/bin:${PATH}
+      PATH: ${SNAP}/postgresql/usr/lib/postgresql/16/bin:${SNAP}/graphics/bin:${SNAP}/graphics/usr/bin:${PATH}
       PERL5LIB: ${SNAP}/usr/share/perl5:${SNAP}/usr/share/perl:${PERL5LIB}
       LD_LIBRARY_PATH: ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}
 
@@ -136,7 +136,7 @@ apps:
 
   ml:
     command: usr/bin/machine-learning.sh
-    command-chain: [usr/bin/graphics-core22-wrapper]
+    command-chain: [usr/bin/gpu-2404-wrapper]
     daemon: simple
     install-mode: disable
     plugs: [network, network-bind]
@@ -147,7 +147,7 @@ apps:
       NODE_ENV: production
       IMMICH_BUILD_DATA: "$SNAP/usr/lib/immich/build"
       TRANSFORMERS_CACHE: /tmp/cache
-      PATH: ${SNAP}/postgresql/usr/lib/postgresql/14/bin:${SNAP}/graphics/bin:${SNAP}/graphics/usr/bin:${PATH}
+      PATH: ${SNAP}/postgresql/usr/lib/postgresql/16/bin:${SNAP}/graphics/bin:${SNAP}/graphics/usr/bin:${PATH}
       LD_LIBRARY_PATH: ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}
 
 parts:

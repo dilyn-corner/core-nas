@@ -1,36 +1,36 @@
 name: dilyn-jellyfin-ffmpeg
 adopt-info: jellyfin-ffmpeg
-base: core22
+base: core24
 icon: snap/gui/icon.png
 license: "CC-BY-NC-SA-4.0 AND GPL-2.0"
 website: https://jellyfin.org
 contact: dilyn.corner@tutanota.com
 issues: https://github.com/dilyn-corner/core-nas/issues
-source-code: https://github.com/dilyn-corner/core-nas/tree/22/jellyfin-ffmpeg
+source-code: https://github.com/dilyn-corner/core-nas/tree/24/jellyfin-ffmpeg
 summary: ffmpeg binaries and libraries from the Jellyfin project
 description: |
   This snap provides the ffmpeg binaries and libraries used by the Jellyfin
   project to facilitate things like hardware encode/decode.
 
-  It serves a similar purpose to other snaps such as mesa-core22 and
+  It serves a similar purpose to other snaps such as mesa-2404 and
   ffmpeg-2204, but with an alternative upstream.
 
-  It follows a similar practices as the mesa-core22 snap. Snaps which consume
+  It follows a similar practices as the mesa-2404 snap. Snaps which consume
   this snap should try and make use of the suggestions in the gpu-snap repository:
   https://github.com/canonical/gpu-snap
 
 grade: stable
 confinement: strict
 
-architectures:
-  - amd64
-  - arm64
+platforms:
+  amd64:
+  arm64:
 
 package-repositories:
   - type: apt
     url: https://repo.jellyfin.org/ubuntu
     priority: prefer
-    suites: [jammy]
+    suites: [noble]
     components: [main]
     architectures: [$CRAFT_ARCH_BUILD_FOR]
     key-id: 4918AABC486CA052358D778D49023CD01DE21A7B
@@ -50,7 +50,7 @@ lint:
 
 # Your snap should declare the corresponding plug and make the target "graphics"
 slots:
-  graphics-core22:
+  gpu-2404:
     interface: content
     content: graphics-libs
     read: [.]
@@ -78,7 +78,7 @@ apps:
   ffmpeg: &_apps
     command: usr/bin/ffmpeg
     # The wrapper sets all environment variables
-    command-chain: [bin/graphics-core22-provider-wrapper]
+    command-chain: [bin/gpu-2404-provider-wrapper]
     plugs: [opengl]
 
   clinfo:
@@ -126,14 +126,14 @@ parts:
   # specify all of the important paths to utilize the libraries in this snap.
   # Your snap will need to specify in its command-chain a wrapper script which
   # calls this script to call your app's binary.
-  mesa-core22:
+  gpu-2404:
     after: [jellyfin-ffmpeg]
     plugin: dump
     source: src/
     organize:
-      graphics-core22-provider-wrapper: bin/
+      gpu-2404-provider-wrapper: bin/
     override-prime: |
       craftctl default
 
       sed -i "s/_arch/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/g" \
-        "${CRAFT_PRIME}/bin/graphics-core22-provider-wrapper"
+        "${CRAFT_PRIME}/bin/gpu-2404-provider-wrapper"
