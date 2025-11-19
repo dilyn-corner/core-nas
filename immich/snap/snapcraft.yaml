@@ -312,6 +312,10 @@ parts:
     after: [build-lock, geonames, immich, machine-learning]
     plugin: dump
     source: src/
+    override-build: |
+      craftctl default
+
+      sed -i "s/_arch/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/" "${CRAFT_PART_INSTALL}/pg_dumpall"
     organize:
       "*": usr/bin/
     # Remove any overlapping binaries provided by our graphics snap
