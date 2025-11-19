@@ -145,7 +145,6 @@ apps:
       PYTHONUNBUFFERED: "1"
       PYTHONDONTWRITEBYTECODE: "1"
       NODE_ENV: production
-      VIRTUAL_ENV: "$SNAP/opt/immich-machine-learning/venv"
       IMMICH_BUILD_DATA: "$SNAP/usr/lib/immich/build"
       TRANSFORMERS_CACHE: /tmp/cache
       PATH: ${SNAP}/postgresql/usr/lib/postgresql/14/bin:${SNAP}/graphics/bin:${SNAP}/graphics/usr/bin:${PATH}
