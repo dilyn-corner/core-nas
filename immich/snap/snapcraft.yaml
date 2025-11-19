@@ -95,9 +95,9 @@ apps:
       - graphics-core22
       - network
       - network-bind
-      - postgresql
       - mount-observe
       - opengl
+      - postgresql
       - removable-media
     # Documentation for all the supported env variables available at https://immich.app/docs/install/environment-variables
     # Any user-configurable environment variables can be set via snap
@@ -161,26 +161,26 @@ parts:
     build-snaps: [node/22/stable]
     stage-snaps: [node/22/stable]
     build-packages:
-      - libfftw3-dev
-      - libopenexr-dev
-      - libgsf-1-dev
-      - libglib2.0-dev
-      - liborc-dev
-      - libopenslide-dev
-      - libmatio-dev
-      - libwebp-dev
-      - libjpeg-turbo8-dev
-      - libexpat1-dev
-      - libexif-dev
-      - libtiff5-dev
       - libcfitsio-dev
+      - libexif-dev
+      - libexpat1-dev
+      - libfftw3-dev
+      - libglib2.0-dev
+      - libgsf-1-dev
+      - libimagequant-dev
+      - libjpeg-turbo8-dev
+      - liblcms2-dev
+      - libmatio-dev
+      - libopenexr-dev
+      - libopenjp2-7-dev
+      - libopenslide-dev
+      - liborc-dev
+      - libpango1.0-dev
       - libpoppler-glib-dev
       - librsvg2-dev
-      - libpango1.0-dev
-      - libopenjp2-7-dev
-      - libimagequant-dev
-      - liblcms2-dev
+      - libtiff5-dev
       - libvips-dev
+      - libwebp-dev
     stage-packages: [libvips42, perl]
     build-environment:
       - COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
