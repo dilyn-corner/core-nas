@@ -1,12 +1,12 @@
 name: dilyn-valkey
 adopt-info: valkey
-base: core22
+base: core24
 icon: snap/gui/icon.png
 license: "CC-BY-NC-SA-4.0 AND BSD-3-Clause"
 website: https://valkey.io
 contact: dilyn.corner@tutanota.com
 issues: https://github.com/dilyn-corner/core-nas/issues
-source-code: https://github.com/dilyn-corner/core-nas/tree/22/valkey
+source-code: https://github.com/dilyn-corner/core-nas/tree/24/valkey
 summary: An in-memory database that persists on disk
 description: |
   This project was forked from the open source Redis project right before the
@@ -25,9 +25,9 @@ description: |
 grade: stable
 confinement: strict
 
-architectures:
-  - build-on: [amd64]
-  - build-on: [arm64]
+platforms:
+  amd64:
+  arm64:
 
 lint:
   ignore: [library]

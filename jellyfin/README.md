@@ -12,7 +12,7 @@ Snap package for the [Jellyfin media server](https://jellyfin.org/).
 ## Interfaces
 
 This snap requires [dilyn-jellyfin-ffmpeg](https://snapcraft.io/dilyn-jellyfin-ffmpeg)
-or some other snap providing a sufficiently similar structure to provide the [graphics-core22](https://canonical.com/mir/docs/the-graphics-core22-snap-interface)
+or some other snap providing a sufficiently similar structure to provide the [gpu-2404](https://canonical.com/mir/docs/the-gpu-2404-snap-interface)
 slot. Please refer to [that snap](../jellyfin-ffmpeg) for details on what that
 means.
 

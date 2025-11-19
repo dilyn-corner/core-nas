@@ -7,7 +7,7 @@ export SNAP_COMMON=/var/snap/dilyn-immich/common
 
 # _arch modified at build-time
 export LD_LIBRARY_PATH="${SNAP}/postgresql/usr/lib/_arch:${LD_LIBRARY_PATH}"
-export PATH="${SNAP}/postgresql/usr/lib/postgresql/14/bin:${PATH}"
+export PATH="${SNAP}/postgresql/usr/lib/postgresql/16/bin:${PATH}"
 # TBD user-changeable
 # _pgdata="$(snapctl get postgresql.pgdata)"
 export PGDATA="${SNAP_COMMON}/postgresql/database"
@@ -17,4 +17,4 @@ export LC_CTYPE="C"
 
 # We're fine with element splitting
 # shellcheck disable=2068
-exec "${SNAP}/postgresql/usr/lib/postgresql/14/bin/pg_dumpall" $@
+exec "${SNAP}/postgresql/usr/lib/postgresql/16/bin/pg_dumpall" $@

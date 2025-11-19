@@ -1,6 +1,6 @@
 name: dilyn-jellyfin
 adopt-info: jellyfin
-base: core22
+base: core24
 icon: snap/gui/icon.png
 license: "CC-BY-NC-SA-4.0 AND GPL-2.0"
 website: https://jellyfin.org
@@ -20,10 +20,9 @@ description: |
 grade: stable
 confinement: strict
 
-architectures:
-  - build-on: [amd64]
-  - build-on: [amd64, arm64]
-    build-for: [arm64]
+platforms:
+  amd64:
+  arm64:
 
 lint:
   ignore: [library]
@@ -31,7 +30,7 @@ lint:
 package-repositories:
   - type: apt
     url: https://repo.jellyfin.org/ubuntu
-    suites: [jammy]
+    suites: [noble]
     components: [main]
     architectures: [$CRAFT_ARCH_BUILD_FOR]
     key-id: 4918AABC486CA052358D778D49023CD01DE21A7B
@@ -40,7 +39,7 @@ plugs:
   # TBD. Requires permission from Store admins
   # home:
   #   read: all
-  graphics-core22:
+  gpu-2404:
     interface: content
     target: graphics
     content: graphics-libs
@@ -68,7 +67,7 @@ apps:
     install-mode: disable
     plugs:
       - firewall-control
-      - graphics-core22
+      - gpu-2404
       - home
       - mount-observe
       - network
@@ -95,12 +94,12 @@ parts:
       craftctl set version="$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/jellyfin-server"_*.deb Version)"
 
   # Remove any overlapping binaries provided by our graphics snap
-  graphics-core22:
+  gpu-2404:
     after: [jellyfin]
     plugin: dump
     source: src/
     organize:
-      graphics-core22-wrapper: bin/graphics-core22-wrapper
+      gpu-2404-wrapper: bin/gpu-2404-wrapper
     override-prime: |
       craftctl default
 

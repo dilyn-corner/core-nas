@@ -17,7 +17,7 @@ for accelerated transcoding tasks.
 
 ## Interfaces
 
-This snap provides the [graphics-core22](https://canonical.com/mir/docs/the-graphics-core22-snap-interface)
+This snap provides the [gpu-2404](https://canonical.com/mir/docs/the-gpu-2404-snap-interface)
 slot. THe function of this slot is to expose its binaries and libraries to
 other snaps to leverage for the purposes of utilizing hardware acceleration for
 transcoding.
@@ -50,7 +50,7 @@ layout:
 
 And at first, snapd will mount nothing to `/etc/OpenCL` (as there is no
 `$SNAP/graphics/etc/OpenCL` to mount). However, after connecting the
-graphics-core22 interface between your consumer and this provider and rebooting
+gpu-2404 interface between your consumer and this provider and rebooting
 your system (or disabling and enabling your consumer snap), there *will* be
 content in `$SNAP/graphics/etc/OpenCL`, and something will successfully appear
 in *your* snap's `/etc/OpenCL`. Hacky, effective! It isn't clear how long
@@ -63,5 +63,5 @@ Some paths must be set ahead of execution so that the app can successfully
 find relevant libraries. While you could set these paths yourself, it may be
 easier to rely on this snap to provide that script which will set those paths
 for you. In order to leverage this, refer to the dilyn-jellyfin snap and see
-its graphics-core22 part, and note the script added to the jellyfin app's
+its gpu-2404 part, and note the script added to the jellyfin app's
 `command-chain`. Your consumer should do something similar.
