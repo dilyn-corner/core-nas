@@ -23,11 +23,6 @@ _uploadloc="$(snapctl get location.upload)"
 _mlon="$(snapctl get ml.enabled)"
 _mlcache="$(snapctl get ml.cache)"
 
-# debugging
-# _loglevel="$(snapctl get loglevel)"
-# _nodeenv="$(snapctl get nodeenv)"
-# _immichenv="$(snapctl get immichenv)"
-
 # Variables consumed by immich
 # export DB_PORT="${_pgport:-5433}"
 # export DB_URL="${_pgurl:-127.0.0.1}"
@@ -43,15 +38,10 @@ _mlcache="$(snapctl get ml.cache)"
 
 export IMMICH_HOST="${_host:-0.0.0.0}"
 export IMMICH_PORT="${_port:-3001}"
-# export IMMICH_LOG_LEVEL="${_loglevel:-log}"
-# export IMMICH_LOG_LEVEL="${_loglevel:-verbose}"
 export UPLOAD_LOCATION="${_uploadloc:-$SNAP_COMMON/upload}"
 export IMMICH_MEDIA_LOCATION="${_medialoc:-$SNAP_COMMON/media}"
 export IMMICH_API_METRICS_PORT="${_apimetricsport:-3004}"
 export IMMICH_MICROSERVICES_METRICS_PORT="${_micrometricsport:-3005}"
-
-# export NODE_ENV="${_nodeenv:-production}"
-# export IMMICH_ENV="${_immichenv:-production}"
 
 export NVIDIA_DRIVER_CAPABILITIES=all
 export NVIDIA_VISIBLE_DEVICES=all
