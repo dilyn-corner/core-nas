@@ -326,3 +326,6 @@ parts:
         while read -r file; do
           rm -f "${CRAFT_PRIME}/${file##*/current/}"
         done
+
+      # These files seem to come from nowhere. They aren't necessary at least.
+      rm -f "${CRAFT_PRIME}/qemu_bcrypt."*
