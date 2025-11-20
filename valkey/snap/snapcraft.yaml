@@ -37,7 +37,7 @@ parts:
     source: https://github.com/valkey-io/valkey
     source-depth: 1
     source-type: git
-    source-tag: 8.1.4
+    source-tag: 9.0.0
     build-packages: [libsystemd-dev, libssl-dev, pkgconf]
     make-parameters:
       - PREFIX=/usr
