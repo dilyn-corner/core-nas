@@ -183,6 +183,8 @@ parts:
     stage-packages: [libvips42, perl]
     build-environment:
       - COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+      # Perhaps one day? This mainly impacts libHEIF
+      # - SHARP_FORCE_GLOBAL_LIBVIPS: "true"
       - CI: "1"
     override-pull: |
       craftctl default
@@ -212,10 +214,11 @@ parts:
         --filter immich \
         --frozen-lockfile --offline
 
-      # Server
       cd "${CRAFT_PART_BUILD}/server"
       pnpm exec nest build --type-check
+      cd -
 
+      # Server
       pnpm \
         --filter immich \
         --frozen-lockfile build
@@ -237,8 +240,6 @@ parts:
              ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/.prettierignore
 
       # SDK and web frontend
-      # cd "${CRAFT_PART_BUILD}/web"
-
       pnpm \
         --filter @immich/sdk \
         --filter immich-web \
