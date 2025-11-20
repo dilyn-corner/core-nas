@@ -1,0 +1,115 @@
+name: dilyn-ersatztv
+version: "25.8.0"
+base: core22
+icon: snap/gui/icon.png
+license: "CC-BY-NC-SA-4.0 AND ZLIB"
+website: https://ersatztv.org
+contact: dilyn.corner@tutanota.com
+issues: https://github.com/dilyn-corner/core-nas/issues
+source-code: https://github.com/dilyn-corner/core-nas/tree/22/ersatztv
+summary: Build Your Own Live TV Channels
+description: |
+  ErsatzTV lets you transform your media library into a personalized, live TV
+  experience—complete with EPG, channel scheduling, and seamless streaming to
+  all your devices. Rediscover your content, your way.
+
+  This is an unofficial snap unaffiliated with the ErsatzTV project.
+
+grade: stable
+confinement: strict
+
+plugs:
+  graphics-core22:
+    interface: content
+    target: graphics
+    content: graphics-libs
+    default-provider: dilyn-jellyfin-ffmpeg
+
+layout:
+  /etc/fonts:
+    bind: $SNAP/etc/fonts
+  /etc/OpenCL:
+    symlink: $SNAP/graphics/etc/OpenCL
+  /usr/share/fonts:
+    bind: $SNAP/usr/share/fonts
+  /usr/lib/jellyfin-ffmpeg:
+    symlink: $SNAP/graphics/usr/lib/jellyfin-ffmpeg
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl:
+    bind: $SNAP/graphics/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/intel-opencl
+
+apps:
+  server:
+    command: bin/ersatztv-server.sh start
+    stop-command: bin/ersatztv-server.sh stop
+    command-chain: [bin/graphics-core22-wrapper]
+    daemon: simple
+    install-mode: disable
+    plugs: [graphics-core22, network, network-bind, opengl, removable-media]
+    environment:
+      PATH: ${SNAP}/graphics/usr/bin:${PATH}
+
+parts:
+  ersatztv:
+    plugin: dump
+    source: https://github.com/ErsatzTV/ErsatzTV/releases/download/v${SNAPCRAFT_PROJECT_VERSION}/ErsatzTV-v${SNAPCRAFT_PROJECT_VERSION}-linux-x64.tar.gz
+    stage-packages: [libicu70]
+
+  # Remove any overlapping binaries provided by our graphics snap
+  graphics-core22:
+    after: [ersatztv]
+    plugin: dump
+    source: src/
+    organize:
+      "*": bin/
+    override-prime: |
+      craftctl default
+
+      find /snap/dilyn-jellyfin-ffmpeg/current/usr/lib -type f -o -type l |\
+        while read -r file; do
+          rm -f "${CRAFT_PRIME}/${file##*/current/}"
+        done
+
+    # From source...?
+    # plugin: dotnet
+    # source: https://github.com/ErsatzTV/ErsatzTV
+    # source-depth: 1
+    # source-type: git
+    # source-tag: v25.8.0
+    # dotnet-build-configuration: Release
+    # dotnet-self-contained-runtime-identifier: linux-x64
+    # build-packages: [dotnet-sdk-9.0]
+    # override-build: |
+    #   ver="$(git describe --tags)"
+    #   craftctl set version="${ver}"
+
+    #   # Build everything
+    #   sed -i '/Scanner/d' ErsatzTv/ErsatzTV.csproj
+
+    #   # Build
+    #   dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj \
+    #     --framework net9.0 \
+    #     --runtime linux-x64 \
+    #     --self-contained true \
+    #     -c Release \
+    #     -o "scanner" \
+    #     -p:DebugType=Embedded \
+    #     -p:RestoreEnablePackagePruning=true \
+    #     -p:EnableCompressionInSingleFile=true \
+    #     -p:InformationalVersion="${ver}-linux-x64" \
+    #     -p:PublishSingleFile=true
+
+    #      dotnet publish ErsatzTV/ErsatzTV.csproj \
+    #        --framework net9.0 \
+    #        --runtime linux-x64 \
+    #        --self-contained true \
+    #        -o "main" \
+    #        -c Release \
+    #        -p:DebugType=Embedded \
+    #        -p:PublishSingleFile=true \
+    #        -p:RestoreEnablePackagePruning=true \
+    #        -p:EnableCompressionInSingleFile=true \
+    #        -p:InformationalVersion="${ver}-linux-x64"
+
+    #       cp -rvf main/* \
+    #               scanner/* \
+    #               "${CRAFT_PART_INSTALL}/"
