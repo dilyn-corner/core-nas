@@ -2,7 +2,7 @@ name: dilyn-ersatztv
 version: "25.8.0"
 base: core22
 icon: snap/gui/icon.png
-license: "CC-BY-NC-SA-4.0 AND ZLIB"
+license: "CC-BY-NC-SA-4.0 AND Zlib"
 website: https://ersatztv.org
 contact: dilyn.corner@tutanota.com
 issues: https://github.com/dilyn-corner/core-nas/issues
