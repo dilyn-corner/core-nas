@@ -21,15 +21,16 @@ the network interface.
 
 ## Usage
 
-This snap does allow configuring the port valkey listens on from the standard 6379. To change the port:
+This snap does allow configuring the port valkey listens on from the standard
+6379. To change the port:
 
 * On the command line
 
 ```
-  snap set valkey.port=portnumber
+  snap set dilyn-valkey port=portnumber
 ```
 
-* In a gadget snap's gadget.yaml
+* In a gadget snap's `gadget.yaml`
 
 ```yaml
 defaults:
