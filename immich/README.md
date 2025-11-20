@@ -24,9 +24,12 @@ a try to make immich viewable on the broader network :)
 The [graphics-core22](https://canonical.com/mir/docs/the-graphics-core22-snap-interface)
 is meant for some provider snap to provide access to the relevant binaries,
 specifically for things like machine learning and transcoding. These features
-are currently not implemented or tested, but the immich server still requires
-that a provider be installed and connected, though this requirement may be
-removed one day.
+are still not heavily tested (especially on a broad range of hardware), but you
+are welcome to try and use them and report issues if you have any!
+
+Hardware acceleration support has been tested with at least the following:
+
+ * Radeon RX 7800XT (VA-API)
 
 Connecting [mount-observe](https://snapcraft.io/docs/mount-observe-interface)
 may prove useful, but you may not require it.
@@ -37,4 +40,24 @@ possible to use this snap with a host-installed postgresql however.
 
 ## Usage
 
-The web UI will be available at the default Immich address <http://localhost:3000>.
+The web UI will be available at the default Immich address <http://localhost:3001>.
+
+Many configuration options are configurable, such as ports and file locations.
+Please refer to [the server wrapper](src/immich-server.sh) for some ideas on
+current defaults and what can be changed. These changes can be done in two ways.
+
+* On the command line
+
+```
+  snap set dilyn-immich redis.port=6380
+```
+
+
+* In a gadget snap's `gadget.yaml`
+
+```yaml
+defaults:
+  ISHUD4ohMh9Ih45FXcYkLYkRvKpkfNRl:
+    redis:
+      port: 6380
+```
