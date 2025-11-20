@@ -156,7 +156,7 @@ parts:
     source: https://github.com/immich-app/immich
     source-depth: 1
     source-type: git
-    source-tag: v2.2.3
+    source-tag: v2.3.1
     build-snaps: [node/22/stable]
     stage-snaps: [node/22/stable]
     build-packages:
@@ -253,16 +253,20 @@ parts:
       mkdir -p "${CRAFT_PART_INSTALL}/usr/lib/immich/build"
       cp -rf "${CRAFT_PART_BUILD}/web/build" "${CRAFT_PART_INSTALL}/usr/lib/immich/build/www"
 
+      # Install the immich-core manifest
+      install -Dm644 "${CRAFT_PART_SRC}/plugins/manifest.json" \
+        "${CRAFT_PART_INSTALL}/usr/lib/immich/build/corePlugin/manifest.json"
+
   machine-learning:
     plugin: uv
     source: https://github.com/immich-app/immich
     source-depth: 1
     source-type: git
-    source-tag: v2.2.3
+    source-tag: v2.3.1
     source-subdir: machine-learning
     uv-extras: [cpu]
     build-snaps: [astral-uv]
-    stage-packages: [libmimalloc2.0]
+    stage-packages: [libgl1, libmimalloc2.0]
     override-build: |
       craftctl default
 
