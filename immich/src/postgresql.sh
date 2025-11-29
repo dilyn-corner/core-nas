@@ -76,7 +76,7 @@ start() {
 
 stop() {
     log "WARN" "Stopping postgresql database"
-    pg_pid="$(head -1 "${PGDATA}/postmaster.pid")"
+    pg_pid="$(_setpriv head -1 "${PGDATA}/postmaster.pid")"
     kill -INT "$pg_pid"
 }
 
