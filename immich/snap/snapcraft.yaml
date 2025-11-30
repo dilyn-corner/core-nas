@@ -296,6 +296,7 @@ parts:
   geonames:
     plugin: nil
     source: https://download.geonames.org/export/dump/cities500.zip
+    build-packages: [curl]
     override-pull: |
       craftctl default
 
