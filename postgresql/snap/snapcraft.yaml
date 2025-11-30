@@ -32,6 +32,10 @@ confinement: strict
 # https://github.com/canonical/snapd/commit/1792fa040db787d766098ba4238dbcfaddfe0f7e
 assumes: [snapd2.68]
 
+architectures:
+  - build-on: [amd64]
+  - build-on: [arm64]
+
 # pgdg ships a pgvector deb but we still want Ubuntu archive's postgresql, need to be careful
 # We'd leverage the priority field, but that breaks apt's ability to fetch the pgvector package
 package-repositories:
@@ -100,12 +104,12 @@ parts:
       # For landscape. Ideally landscape (as a snap) would ship these. We need
       # the extension control file bu that's not in the normal search path and
       # not modifiable until postgresql 18:
-  # https://github.com/postgres/postgres/commit/4f7f7b0375854e2f89876473405a8f21c95012af
-      # There's no good reason it should be here and not with landscape;
-      # something to experiment with
-      # - postgresql-14-debversion
-      # - postgresql-plpython3-14
-      # - postgresql-contrib
+    # https://github.com/postgres/postgres/commit/4f7f7b0375854e2f89876473405a8f21c95012af
+    # There's no good reason it should be here and not with landscape;
+    # something to experiment with
+    # - postgresql-14-debversion
+    # - postgresql-plpython3-14
+    # - postgresql-contrib
     override-build: |
       craftctl default
 

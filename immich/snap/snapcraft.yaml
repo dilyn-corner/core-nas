@@ -38,6 +38,10 @@ confinement: strict
 
 assumes: [snapd2.68]
 
+architectures:
+  - build-on: [amd64]
+  - build-on: [arm64]
+
 # postgres hates to run with root permissions and this is a workaround to allow
 # a snap to drop privileges to some non-root user.
 # Requires setpriv and some sort of command chain script to handle permission
