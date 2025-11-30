@@ -98,11 +98,13 @@ parts:
     plugin: nil
     stage-packages:
       - clinfo
-      - intel-opencl-icd
       - jellyfin-ffmpeg7
       - libdrm-common
       - va-driver-all
+      - vainfo
       - vulkan-tools
+      - on amd64:
+          - intel-opencl-icd
     override-build: |
       craftctl default
       craftctl set version="$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/jellyfin-ffmpeg7_"*.deb Version)"
