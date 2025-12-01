@@ -24,7 +24,9 @@ confinement: strict
 
 architectures:
   - build-on: [amd64]
-  - build-on: [arm64]
+    build-for: [amd64]
+  - build-on: [amd64, arm64]
+    build-for: [arm64]
 
 package-repositories:
   - type: apt
@@ -97,32 +99,44 @@ parts:
   jellyfin-ffmpeg:
     plugin: nil
     stage-packages:
-      - clinfo
-      - jellyfin-ffmpeg7
-      - libdrm-common
-      - va-driver-all
-      - vainfo
-      - vulkan-tools
-      - on amd64:
-          - intel-opencl-icd
+      - clinfo:${CRAFT_ARCH_BUILD_FOR}
+      - jellyfin-ffmpeg7:${CRAFT_ARCH_BUILD_FOR}
+      - libdrm-common:all
+      - va-driver-all:${CRAFT_ARCH_BUILD_FOR}
+      - vulkan-tools:${CRAFT_ARCH_BUILD_FOR}
+      - to amd64:
+          - intel-opencl-icd:${CRAFT_ARCH_BUILD_FOR}
+      - to arm64:
+          - vainfo:${CRAFT_ARCH_BUILD_FOR}
     override-build: |
       craftctl default
       craftctl set version="$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/jellyfin-ffmpeg7_"*.deb Version)"
     organize:
+      lib/: usr/lib/
       usr/lib/jellyfin-ffmpeg/ffmpeg: usr/bin/ffmpeg
       usr/lib/jellyfin-ffmpeg/ffprobe: usr/bin/ffprobe
       usr/lib/jellyfin-ffmpeg/vainfo: usr/bin/vainfo
     stage:
+      - -etc/apt/
+      - -etc/debconf.conf
       - -etc/fonts/
+      - -usr/bin/debconf*
       - -usr/include/
+      - -usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/gconv/
+      - -usr/sbin/
       - -usr/share/X11/
+      - -usr/share/bash-completion/
       - -usr/share/bug/
+      - -usr/share/debconf/
       - -usr/share/doc-base/
       - -usr/share/fonts/
       - -usr/share/lintian/
       - -usr/share/locale/
       - -usr/share/man/
+      - -usr/share/perl5/
+      - -usr/share/pixmaps/
       - -usr/share/xml/
+      - -var/
 
   # This script provides a wrapper your consumer snap will use which will
   # specify all of the important paths to utilize the libraries in this snap.
