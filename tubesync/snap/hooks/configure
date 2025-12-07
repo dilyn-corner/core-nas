@@ -1,0 +1,4 @@
+#!/bin/sh -eux
+
+# Do nothing for now
+# One day we'll change this

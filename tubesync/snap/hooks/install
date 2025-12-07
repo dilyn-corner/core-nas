@@ -1,0 +1,17 @@
+#!/bin/sh -eux
+
+mkdir -p "${SNAP_COMMON}/config/cache/pycache" \
+          "${SNAP_COMMON}/config/media"        \
+          "${SNAP_COMMON}/config/tasks"        \
+          "${SNAP_COMMON}/downloads/audio"     \
+          "${SNAP_COMMON}/downloads/video"
+
+# Django complains if we execute from a readonly location, so build the site in
+# a writable one
+cp -rf "${SNAP}/fontawesome-free" \
+       "${SNAP}/tubesync"         \
+       "${SNAP_COMMON}"
+
+"${SNAP_COMMON}/tubesync/manage.py" migrate
+"${SNAP_COMMON}/tubesync/manage.py" compilescss
+"${SNAP_COMMON}/tubesync/manage.py" collectstatic --no-input

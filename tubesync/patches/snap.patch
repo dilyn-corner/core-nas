@@ -1,0 +1,84 @@
+diff --git a/tubesync/common/huey.py b/tubesync/common/huey.py
+index 85028c19..239c2a37 100644
+--- a/tubesync/common/huey.py
++++ b/tubesync/common/huey.py
+@@ -239,7 +239,7 @@ def sqlite_tasks(key, /, prefix=None, thread=None, workers=None):
+         utc=True,
+         compression=True,
+         connection=dict(
+-            filename=f'/config/tasks/{name}.db',
++            filename=f'/var/snap/dilyn-tubesync/common/config/tasks/{name}.db',
+             fsync=True,
+             isolation_level='IMMEDIATE', # _create_connection sets this to None
+             strict_fifo=True,
+diff --git a/tubesync/full_playlist.sh b/tubesync/full_playlist.sh
+index 08bab14b..fa88e84e 100755
+--- a/tubesync/full_playlist.sh
++++ b/tubesync/full_playlist.sh
+@@ -15,7 +15,7 @@ _awk_prog='$2 == "=" && $1 ~ /^YOUTUBE_/ && $1 ~ /DIR$/ {
+     $3=$1 $2 $3; $1=$2=""; sub("^" OFS "+", "");
+     print;
+     }'
+-. <(python3 /app/manage.py diffsettings --output hash | awk "${_awk_prog}")
++. <(python3 /snap/dilyn-tubesync/current/tubesync/manage.py diffsettings --output hash | awk "${_awk_prog}")
+ WHERE="${YOUTUBE_DL_CACHEDIR:-/dev/shm}"
+ 
+ downloaded_entries="$( find /dev/shm "${WHERE}" \
+diff --git a/tubesync/sync/youtube.py b/tubesync/sync/youtube.py
+index 5b8ab1a4..3ef5dc98 100644
+--- a/tubesync/sync/youtube.py
++++ b/tubesync/sync/youtube.py
+@@ -215,9 +215,9 @@ def get_media_info(url, /, *, days=None, info_json=None):
+     postprocessors.append(dict(
+         key='Exec',
+         when='playlist',
+-        exec_cmd="/usr/bin/env bash /app/full_playlist.sh '%(id)s' '%(playlist_count)d'",
++        exec_cmd="/usr/bin/env bash /snap/dilyn-tubesync/current/tubesync/full_playlist.sh '%(id)s' '%(playlist_count)d'",
+     ))
+-    cache_directory_path = Path(user_set('cachedir', opts, '/dev/shm'))
++    cache_directory_path = '/tmp'
+     playlist_infojson = 'postprocessor_[%(id)s]_%(n_entries)d_%(playlist_count)d_temp'
+     outtmpl = dict(
+         default='',
+diff --git a/tubesync/tubesync/gunicorn.py b/tubesync/tubesync/gunicorn.py
+index 97e092da..10d3d969 100644
+--- a/tubesync/tubesync/gunicorn.py
++++ b/tubesync/tubesync/gunicorn.py
+@@ -18,17 +18,17 @@ def get_num_workers():
+ 
+ def get_bind():
+     host = os.getenv('LISTEN_HOST', '127.0.0.1')
+-    port = os.getenv('LISTEN_PORT', '8080')
++    port = os.getenv('LISTEN_PORT', '8888')
+     return '{}:{}'.format(host, port)
+ 
+ 
+ workers = get_num_workers()
+ timeout = 90
+-chdir = '/app'
++chdir = '/var/snap/dilyn-tubesync/common/tubesync'
+ daemon = False
+-pidfile = '/run/app/gunicorn.pid'
+-user = 'app'
+-group = 'app'
++pidfile = '/var/snap/dilyn-tubesync/common/gunicorn.pid'
++user = 'root'
++group = 'root'
+ loglevel = 'info'
+ errorlog = '-'
+ accesslog = '/dev/null'  # Access logs are printed to stdout from nginx
+diff --git a/tubesync/tubesync/local_settings.py.container b/tubesync/tubesync/local_settings.py.container
+index f4205772..d4fd1df6 100644
+--- a/tubesync/tubesync/local_settings.py.container
++++ b/tubesync/tubesync/local_settings.py.container
+@@ -5,8 +5,8 @@ from urllib.parse import urljoin
+ from common.utils import getenv, parse_database_connection_string
+ 
+ 
+-BASE_DIR = Path(__file__).resolve().parent.parent
+-ROOT_DIR = Path('/')
++BASE_DIR = Path('/var/snap/dilyn-tubesync/common')
++ROOT_DIR = Path('/var/snap/dilyn-tubesync/common')
+ CONFIG_BASE_DIR = ROOT_DIR / 'config'
+ DOWNLOADS_BASE_DIR = ROOT_DIR / 'downloads'
+ DJANGO_URL_PREFIX = getenv('DJANGO_URL_PREFIX').strip()

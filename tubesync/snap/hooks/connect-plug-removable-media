@@ -1,0 +1,24 @@
+#!/bin/sh -eux
+
+# removable-media isn't required for functionality so assume that if someone
+# connects the interface, they intend for videos to be stored there.
+
+_medialoc="$(snapctl get location.downloads)"
+
+[ -n "$_medialoc" ] || {
+  _medialoc=/media/tubesync
+  snapctl set location.downloads="$_medialoc"
+}
+
+# Ensure medialoc exists
+[ -d "$_medialoc" ] || mkdir -p "$_medialoc"
+
+# Change downloads location
+sed -i "s;BASE_DIR / 'downloads';Path\(\'$_medialoc\/downloads\'\);g" \
+  "${SNAP_COMMON}/tubesync/tubesync/local_settings.py"
+
+mv -f "${SNAP_COMMON}/downloads" \
+  "$_medialoc/tubesync"
+
+# Restart all services
+snapctl restart "${SNAP_INSTANCE_NAME}"

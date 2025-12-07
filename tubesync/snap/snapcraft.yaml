@@ -1,0 +1,158 @@
+name: dilyn-tubesync
+base: core22
+version: "0.15.12"
+icon: snap/gui/icon.svg
+license: "CC-BY-NC-SA-4.0 AND AGPL-3.0"
+website: https://github.com/meeb/tubesync
+contact: dilyn.corner@tutanota.com
+issues: https://github.com/dilyn-corner/core-nas/issues
+source-code: https://github.com/dilyn-corner/core-nas/tree/22/tubesync
+summary: Syncs YouTube channels and playlists to a locally hosted media server
+description: |
+  TubeSync is a PVR (personal video recorder) for YouTube. Or, like Sonarr but
+  for YouTube (with a built-in download client). It is designed to synchronize
+  channels and playlists from YouTube to local directories and update your media
+  server once media is downloaded.
+
+  If you want to watch YouTube videos in particular quality or settings from
+  your local media server, then TubeSync is for you. Internally, TubeSync is a
+  web interface wrapper on yt-dlp and ffmpeg with a task scheduler.
+
+  There are several other web interfaces to YouTube and yt-dlp all with varying
+  features and implementations. TubeSync's largest difference is full PVR
+  experience of updating media servers and better selection of media formats.
+  Additionally, to be as hands-free as possible, TubeSync has gradual retrying
+  of failures with back-off timers so media which fails to download will be
+  retried for an extended period making it, hopefully, quite reliable.
+
+  This is an unofficial snap.
+
+grade: stable
+confinement: strict
+
+plugs:
+  shmem:
+    interface: shared-memory
+    private: true
+  graphics-core22:
+    interface: content
+    target: graphics
+    content: graphics-libs
+    default-provider: dilyn-jellyfin-ffmpeg
+
+layout:
+  /usr/lib/jellyfin-ffmpeg:
+    symlink: $SNAP/graphics/usr/lib/jellyfin-ffmpeg
+
+hooks:
+  connect-plug-removable-media:
+    plugs: [removable-media]
+
+apps:
+  server: &_daemons
+    command: bin/tubesync-server.sh
+    command-chain: [bin/graphics-core22-wrapper]
+    daemon: simple
+    plugs:
+      [graphics-core22, network, network-bind, opengl, removable-media, shmem]
+    environment:
+      PATH: ${SNAP}/graphics/usr/bin:${PATH}
+      PYTHONPATH: ${SNAP_COMMON}/tubesync:${PYTHONPATH}
+
+  huey-network: &_hueydaemons
+    <<: *_daemons
+    after: [server]
+    command: bin/djangohuey.sh network
+
+  huey-limited:
+    <<: *_hueydaemons
+    command: bin/djangohuey.sh limited
+
+  huey-filesystem:
+    <<: *_hueydaemons
+    command: bin/djangohuey.sh filesystem
+
+  huey-database:
+    <<: *_hueydaemons
+    command: bin/djangohuey.sh database
+
+parts:
+  tubesync:
+    plugin: uv
+    source: https://github.com/meeb/tubesync/archive/refs/tags/v${SNAPCRAFT_PROJECT_VERSION}.tar.gz
+    build-snaps: [astral-uv]
+    build-packages: [default-libmysqlclient-dev, pkgconf]
+    build-environment:
+      - PIP_NO_COMPILE: 1
+    stage-snaps: [deno/latest/stable]
+    stage-packages: [libmysqlclient21]
+    override-pull: |
+      craftctl default
+
+      patch -p1 < "${CRAFT_PROJECT_DIR}/patches/snap.patch"
+    override-build: |
+      # Most of these things would normally be handled by the UV plugin but we
+      # don't ever call the plugin's default behavior so we do it manually.
+      pyver="$(python3 --version | cut -d' ' -f2)"
+
+      # Create uv-managed venv
+      uv venv            \
+        --relocatable    \
+        --allow-existing \
+        --python $pyver  \
+        "${CRAFT_PART_INSTALL}"
+
+      # Use pipenv from Pypi as the archive version is too old
+      uv pip install pipenv
+
+      # Create a fresh Pipfile.lock to generate requirements.txt
+      pipenv install --clear
+
+      # Generate requirements.txt
+      pipenv requirements > "${CRAFT_PART_BUILD}/requirements.txt"
+
+      export PARTS_PYTHON_INTERPRETER="python${pyver%%.*}"
+      export PARTS_PYTHON_VENV_INTERP_PATH="${CRAFT_PART_INSTALL}/bin/python"
+
+      cp -f "${CRAFT_PART_BUILD}/tubesync/tubesync/local_settings.py.container" \
+        "${CRAFT_PART_BUILD}/tubesync/tubesync/local_settings.py"
+
+      # Use uv to install dependencies into venv ($CRAFT_PART_INSTALL)
+      uv pip install --strict --requirements "${CRAFT_PART_BUILD}/requirements.txt"
+
+      # yt-dlp requires slight changes
+      cp -rf "${CRAFT_PART_BUILD}/patches/yt_dlp/"* \
+        "${CRAFT_PART_INSTALL}/lib/python${pyver%.*}/site-packages/yt_dlp"
+
+      # Not covered in the requirements, it seems
+      uv pip install libsass
+
+      # These are only here to be copied to $SNAP_COMMON. It's possible that we
+      # could instead ship these bits as components that are then copied, and
+      # then remove the component. Requires further investigation. For now, it's
+      # "fine" -- consumes only a bit of space on disk.
+      cp -rf "${CRAFT_PART_BUILD}/fontawesome-free" \
+             "${CRAFT_PART_BUILD}/tubesync"         \
+             "${CRAFT_PART_INSTALL}"
+
+      # Replace the shebangs to be correct
+      find "${CRAFT_PART_INSTALL}" -type f -executable -print0 |
+      xargs --no-run-if-empty -0 sed -i \
+        "1 s|^#\\!${PARTS_PYTHON_VENV_INTERP_PATH}.*$|#!/usr/bin/env ${PARTS_PYTHON_INTERPRETER}|"
+    organize:
+      deno: bin/deno
+
+  # Remove any overlapping binaries provided by our graphics snap
+  graphics-core22:
+    after: [tubesync]
+    plugin: dump
+    source: src/
+    organize:
+      "*": bin/
+    override-prime: |
+      craftctl default
+
+      find /snap/dilyn-jellyfin-ffmpeg/current/usr/lib -type f -o -type l |\
+        while read -r file; do
+          rm -f "${CRAFT_PRIME}/${file##*/current/}"
+        done
