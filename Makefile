@@ -1,20 +1,22 @@
 .POSIX:
 
+# Could be changed
 SC      ?= snapcraft
-
-SCBLD   ?= prime
-SCPCK   ?= pack
-SCUPL   ?= upload
-
+ARCH    ?= amd64
 BLFLAGS ?= --destructive-mode
-UPFLAGS ?= --release latest/edge
+EXFLAGS ?= --build-for $(ARCH)
+TRK     ?= --release latest/edge
 
-EXFLAGS ?= --build-for amd64
+# Shouldn't be changed
+SCBLD = prime
+SCPCK = pack
+UPFLG = upload
 
 SNAP_PRIME = valkey/prime     \
 			 immich/prime     \
 			 jellyfin/prime   \
 			 ersatztv/prime   \
+			 tubesync/prime   \
 			 postgresql/prime \
 			 jellyfin-ffmpeg/prime
 
@@ -22,49 +24,60 @@ SNAP_OBJ = valkey.snap     \
 		   immich.snap     \
 		   jellyfin.snap   \
 		   ersatztv.snap   \
+		   tubesync.snap   \
 		   postgresql.snap \
 		   jellyfin-ffmpeg.snap
 
 # What is a folder if not the suffix of ${PWD%/*}
 .SUFFIXES: prime .snap
 
-.PHONY: prepare
+.PHONY: prepare undo-prepare
 
-# Make some necessary modifications to ease building requirements
-# snapcraft will require that default-providers be *installed*, so ignore them
-# Instead, refer to other build directories
+# Make some modifications to ease building requirements. Snapcraft requires
+# that default-providers be *installed*, so ignore them. Instead, refer to other
+# build directories
 prepare:
 	sed -i -e 's|/snap/dilyn-jellyfin-ffmpeg|$(PWD)/jellyfin-ffmpeg|' \
-		   -e 's/current/prime/' \
-		   -e 's/default-provider:/#default-provider:/' */snap/snapcraft.yaml
+		   -e 's|default-provider:|#default-provider:|'               \
+		   -e 's|/current/|/prime/|'  */snap/snapcraft.yaml
+
+# Undo preparation
+undo-prepare:
+	sed -i -e 's|$(PWD)/jellyfin-ffmpeg|/snap/dilyn-jellyfin-ffmpeg|' \
+		   -e 's|#default-provider:|default-provider:|'               \
+		   -e 's|/prime/|/current/|' */snap/snapcraft.yaml
+
 
 # Build $(SNAP_PRIME) directories
 $(SNAP_PRIME): prepare
 	cd $* && $(SC) $(SCBLD) $(BLFLAGS) $(EXFLAGS)
 
-# A dependency
+# Dependencies
 jellyfin/prime: jellyfin-ffmpeg/prime
 ersatztv/prime: jellyfin-ffmpeg/prime
+tubesync/prime: jellyfin-ffmpeg/prime
 immich/prime:   jellyfin-ffmpeg/prime
 
 # Build snap packages from $(SNAP)/prime directories
-#   $(OBJ): src/$(@:.o=.c)
 $(SNAP_OBJ): $(SNAP_PRIME)
-        # Undo preparation
-	sed -i -e 's|$(PWD)/jellyfin-ffmpeg|/snap/dilyn-jellyfin-ffmpeg|' \
-		   -e 's/prime/current/' \
-		   -e 's/#default-provider:/default-provider:/' */snap/snapcraft.yaml
+	make undo-prepare
+	$(SC) $(SCPCK) -o $@ $(@:.snap=/prime)
 
-	$(SC) $(SCPCK) -o $@ $<
+.DEFAULT: release-all
 
-.PHONY: prime-all pack-all release-all clean
+.PHONY: prime-all pack-all clean
 
+# Simple rule to generate all prime directories
 prime-all: $(SNAP_PRIME)
 
-pack-all: $(SNAP_OBJ)
+# Simple rule to generate all snap packages
+pack-all:  $(SNAP_OBJ)
 
-release: $(SNAP_OBJ)
-	$(SC) $(SCUPL) $(UPFLAGS) $(CHANNEL) $<
+# Real rule to upload and release the snap packages
+release-all: $(SNAP_OBJ)
+	for snap in $(SNAP_OBJ); do        \
+		$(SC) $(UPFLG) $(TRK) $$snap ; \
+	done
 
 clean:
 	rm -f *.snap
