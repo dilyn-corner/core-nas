@@ -27,7 +27,8 @@ confinement: strict
 
 architectures:
   - build-on: [amd64]
-  - build-on: [arm64]
+  - build-on: [amd64, arm64]
+    build-for: [arm64]
 
 apps:
   valkey:
@@ -42,7 +43,18 @@ parts:
     source-depth: 1
     source-type: git
     source-tag: 9.0.1
-    build-packages: [libsystemd-dev, libssl-dev, pkgconf]
+    build-packages:
+      - libsystemd-dev:${CRAFT_ARCH_BUILD_FOR}
+      - libssl-dev:${CRAFT_ARCH_BUILD_FOR}
+      - pkgconf:${CRAFT_ARCH_BUILD_FOR}
+      - on amd64 to arm64:
+        - gcc-${CRAFT_ARCH_TRIPLET_BUILD_FOR}
+        - libc6-dev-${CRAFT_ARCH_BUILD_FOR}-cross
+    build-environment:
+      - CC: "${CRAFT_ARCH_TRIPLET_BUILD_FOR}-gcc"
+      - to arm64:
+        - USE_JEMALLOC: "no"
+        - MALLOC: "libc"
     make-parameters:
       - PREFIX=/usr
       - BUILD_TLS=yes
@@ -55,4 +67,4 @@ parts:
     override-prime: |
       craftctl default
 
-      find "${CRAFT_PRIME}/usr/bin" -exec strip -s -R .comment -R .note {} \;
+      find "${CRAFT_PRIME}/usr/bin" -exec ${CRAFT_ARCH_BUILD_FOR}-strip -s -R .comment -R .note {} \;

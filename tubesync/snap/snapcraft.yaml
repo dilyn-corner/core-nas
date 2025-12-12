@@ -30,6 +30,11 @@ description: |
 grade: stable
 confinement: strict
 
+architectures:
+  - build-on: [amd64]
+  - build-on: [amd64, arm64]
+    build-for: [arm64]
+
 plugs:
   shmem:
     interface: shared-memory
@@ -81,11 +86,21 @@ parts:
     plugin: uv
     source: https://github.com/meeb/tubesync/archive/refs/tags/v${SNAPCRAFT_PROJECT_VERSION}.tar.gz
     build-snaps: [astral-uv]
-    build-packages: [default-libmysqlclient-dev, pkgconf]
+    build-packages:
+      - default-libmysqlclient-dev:${CRAFT_ARCH_BUILD_FOR}
+      - libpython3-dev:${CRAFT_ARCH_BUILD_FOR}
+      - pkgconf:${CRAFT_ARCH_BUILD_FOR}
+      - on amd64 to arm64:
+        - g++-${CRAFT_ARCH_TRIPLET_BUILD_FOR}
+        - libonig-dev:${CRAFT_ARCH_BUILD_FOR}
     build-environment:
       - PIP_NO_COMPILE: 1
+      - on amd64 to arm64:
+        - LD_LIBRARY_PATH: "${CRAFT_PART_INSTALL}/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${CRAFT_PART_INSTALL}/lib"
     stage-snaps: [deno/latest/stable]
-    stage-packages: [libmysqlclient21]
+    stage-packages:
+      - libmysqlclient21:${CRAFT_ARCH_BUILD_FOR}
+      - python3:${CRAFT_ARCH_BUILD_FOR}
     override-pull: |
       craftctl default
 

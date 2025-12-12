@@ -40,7 +40,8 @@ assumes: [snapd2.68]
 
 architectures:
   - build-on: [amd64]
-  - build-on: [arm64]
+  - build-on: [amd64, arm64]
+    build-for: [arm64]
 
 # postgres hates to run with root permissions and this is a workaround to allow
 # a snap to drop privileges to some non-root user.
@@ -184,7 +185,10 @@ parts:
       - libtiff5-dev
       - libvips-dev
       - libwebp-dev
-    stage-packages: [libvips42, perl]
+    stage-packages:
+      - libstdc++6:${CRAFT_ARCH_BUILD_FOR}
+      - libvips42:${CRAFT_ARCH_BUILD_FOR}
+      - perl:${CRAFT_ARCH_BUILD_FOR}
     build-environment:
       - COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
       # Perhaps one day? This mainly impacts libHEIF
@@ -271,7 +275,9 @@ parts:
     source-subdir: machine-learning
     uv-extras: [cpu]
     build-snaps: [astral-uv]
-    stage-packages: [libgl1, libmimalloc2.0]
+    stage-packages:
+      - libgl1:${CRAFT_ARCH_BUILD_FOR}
+      - libmimalloc2.0:${CRAFT_ARCH_BUILD_FOR}
     override-build: |
       craftctl default
 

@@ -34,7 +34,8 @@ assumes: [snapd2.68]
 
 architectures:
   - build-on: [amd64]
-  - build-on: [arm64]
+  - build-on: [amd64, arm64]
+    build-for: [arm64]
 
 # pgdg ships a pgvector deb but we still want Ubuntu archive's postgresql, need to be careful
 # We'd leverage the priority field, but that breaks apt's ability to fetch the pgvector package
@@ -45,6 +46,7 @@ package-repositories:
     components: [main]
     key-id: B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
     architectures: [$CRAFT_ARCH_BUILD_FOR]
+    priority: defer
 
 # postgres hates to run with root permissions and this is a workaround to allow
 # a snap to drop privileges to some non-root user.
@@ -100,7 +102,9 @@ parts:
   postgresql:
     plugin: dump
     source: src/
-    stage-packages: [perl, postgresql=14+238]
+    stage-packages:
+      - perl:${CRAFT_ARCH_BUILD_FOR}
+      - postgresql-14:${CRAFT_ARCH_BUILD_FOR}
       # For landscape. Ideally landscape (as a snap) would ship these. We need
       # the extension control file bu that's not in the normal search path and
       # not modifiable until postgresql 18:
@@ -113,7 +117,7 @@ parts:
     override-build: |
       craftctl default
 
-      craftctl set version=$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/postgresql_"*_all.deb Version)
+      craftctl set version=$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/postgresql-14"*_${CRAFT_ARCH_BUILD_FOR}.deb Version)
 
   # For immich. Ideally immich would ship these, but We need the extension
   # control file but that's not in the normal search path and not modifiable
@@ -126,4 +130,5 @@ parts:
   vchord:
     plugin: dump
     source: https://github.com/tensorchord/VectorChord/releases/download/0.4.3/postgresql-14-vchord_0.4.3-1_${CRAFT_ARCH_BUILD_FOR}.deb
-    stage-packages: [postgresql-14-pgvector]
+    stage-packages:
+      - postgresql-14-pgvector:${CRAFT_ARCH_BUILD_FOR}

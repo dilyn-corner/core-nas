@@ -22,7 +22,8 @@ confinement: strict
 
 architectures:
   - build-on: [amd64]
-  - build-on: [arm64]
+  - build-on: [amd64, arm64]
+    build-for: [arm64]
 
 package-repositories:
   - type: apt
@@ -82,7 +83,9 @@ apps:
 parts:
   jellyfin:
     plugin: nil
-    stage-packages: [jellyfin-server, jellyfin-web]
+    stage-packages:
+      - jellyfin-server:${CRAFT_ARCH_BUILD_FOR}
+      - jellyfin-web:all
     override-build: |
       craftctl default
 

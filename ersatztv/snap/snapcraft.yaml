@@ -20,7 +20,8 @@ confinement: strict
 
 architectures:
   - build-on: [amd64]
-  - build-on: [arm64]
+  - build-on: [amd64, arm64]
+    build-for: [arm64]
 
 plugs:
   graphics-core22:
@@ -58,7 +59,8 @@ parts:
     source:
       - on amd64: https://github.com/ErsatzTV/ErsatzTV/releases/download/v${SNAPCRAFT_PROJECT_VERSION}/ErsatzTV-v${SNAPCRAFT_PROJECT_VERSION}-linux-x64.tar.gz
       - on arm64: https://github.com/ErsatzTV/ErsatzTV/releases/download/v${SNAPCRAFT_PROJECT_VERSION}/ErsatzTV-v${SNAPCRAFT_PROJECT_VERSION}-linux-arm64.tar.gz
-    stage-packages: [libicu70]
+    stage-packages:
+      - libicu70:${CRAFT_ARCH_BUILD_FOR}
 
   # Remove any overlapping binaries provided by our graphics snap
   graphics-core22:
