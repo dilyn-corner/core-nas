@@ -91,12 +91,14 @@ parts:
       - libpython3-dev:${CRAFT_ARCH_BUILD_FOR}
       - pkgconf:${CRAFT_ARCH_BUILD_FOR}
       - on amd64 to arm64:
-        - g++-${CRAFT_ARCH_TRIPLET_BUILD_FOR}
-        - libonig-dev:${CRAFT_ARCH_BUILD_FOR}
+          - g++-${CRAFT_ARCH_TRIPLET_BUILD_FOR}
+          - libonig-dev:${CRAFT_ARCH_BUILD_FOR}
     build-environment:
       - PIP_NO_COMPILE: 1
+      - UV_FROZEN: "false"
       - on amd64 to arm64:
-        - LD_LIBRARY_PATH: "${CRAFT_PART_INSTALL}/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${CRAFT_PART_INSTALL}/lib"
+          - LD_LIBRARY_PATH: "${CRAFT_PART_INSTALL}/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${CRAFT_PART_INSTALL}/lib"
+          - CC: "${CRAFT_ARCH_TRIPLET_BUILD_FOR}-gcc"
     stage-snaps: [deno/latest/stable]
     stage-packages:
       - libmysqlclient21:${CRAFT_ARCH_BUILD_FOR}
@@ -105,42 +107,20 @@ parts:
       craftctl default
 
       patch -p1 < "${CRAFT_PROJECT_DIR}/patches/snap.patch"
+
+      # Migrate from pipenv to uv
+      uvx migrate-to-uv
     override-build: |
-      # Most of these things would normally be handled by the UV plugin but we
-      # don't ever call the plugin's default behavior so we do it manually.
-      pyver="$(python3 --version | cut -d' ' -f2)"
+      craftctl default
 
-      # Create uv-managed venv
-      uv venv            \
-        --relocatable    \
-        --allow-existing \
-        --python $pyver  \
-        "${CRAFT_PART_INSTALL}"
-
-      # Use pipenv from Pypi as the archive version is too old
-      uv pip install pipenv
-
-      # Create a fresh Pipfile.lock to generate requirements.txt
-      pipenv install --clear
-
-      # Generate requirements.txt
-      pipenv requirements > "${CRAFT_PART_BUILD}/requirements.txt"
-
-      export PARTS_PYTHON_INTERPRETER="python${pyver%%.*}"
-      export PARTS_PYTHON_VENV_INTERP_PATH="${CRAFT_PART_INSTALL}/bin/python"
-
+      # Copy tubesync container settings as local overrides
       cp -f "${CRAFT_PART_BUILD}/tubesync/tubesync/local_settings.py.container" \
         "${CRAFT_PART_BUILD}/tubesync/tubesync/local_settings.py"
 
-      # Use uv to install dependencies into venv ($CRAFT_PART_INSTALL)
-      uv pip install --strict --requirements "${CRAFT_PART_BUILD}/requirements.txt"
-
       # yt-dlp requires slight changes
+      _pyver="$(python3 --version | cut -d' ' -f2)"
       cp -rf "${CRAFT_PART_BUILD}/patches/yt_dlp/"* \
-        "${CRAFT_PART_INSTALL}/lib/python${pyver%.*}/site-packages/yt_dlp"
-
-      # Not covered in the requirements, it seems
-      uv pip install libsass
+        "${CRAFT_PART_INSTALL}/lib/python${_pyver%.*}/site-packages/yt_dlp"
 
       # These are only here to be copied to $SNAP_COMMON. It's possible that we
       # could instead ship these bits as components that are then copied, and
@@ -149,11 +129,6 @@ parts:
       cp -rf "${CRAFT_PART_BUILD}/fontawesome-free" \
              "${CRAFT_PART_BUILD}/tubesync"         \
              "${CRAFT_PART_INSTALL}"
-
-      # Replace the shebangs to be correct
-      find "${CRAFT_PART_INSTALL}" -type f -executable -print0 |
-      xargs --no-run-if-empty -0 sed -i \
-        "1 s|^#\\!${PARTS_PYTHON_VENV_INTERP_PATH}.*$|#!/usr/bin/env ${PARTS_PYTHON_INTERPRETER}|"
     organize:
       deno: bin/deno
 
