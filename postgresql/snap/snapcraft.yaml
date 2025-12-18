@@ -117,7 +117,7 @@ parts:
     override-build: |
       craftctl default
 
-      craftctl set version=$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/postgresql-14"*_${CRAFT_ARCH_BUILD_FOR}.deb Version)
+      craftctl set version=$(dpkg-deb -f "${CRAFT_PART_BUILD}/../stage_packages/postgresql-14"_*${CRAFT_ARCH_BUILD_FOR}.deb Version)
 
   # For immich. Ideally immich would ship these, but We need the extension
   # control file but that's not in the normal search path and not modifiable
