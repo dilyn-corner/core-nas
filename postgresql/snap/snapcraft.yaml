@@ -69,9 +69,9 @@ hooks:
   install:
     plugs: &_plugs [network, network-bind]
     environment: &_env
-      PATH:            "${SNAP}/usr/lib/postgresql/14/bin:${PATH}"
+      PATH: "${SNAP}/usr/lib/postgresql/14/bin:${PATH}"
       LD_LIBRARY_PATH: "${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}"
-      PERL5LIB:        "${PERL5LIB}:${SNAP}/usr/share/perl5:${SNAP}/usr/share/perl"
+      PERL5LIB: "${PERL5LIB}:${SNAP}/usr/share/perl5:${SNAP}/usr/share/perl"
 
 apps:
   # This service manages postgres operations.
@@ -108,12 +108,12 @@ parts:
       # For landscape. Ideally landscape (as a snap) would ship these. We need
       # the extension control file bu that's not in the normal search path and
       # not modifiable until postgresql 18:
-    # https://github.com/postgres/postgres/commit/4f7f7b0375854e2f89876473405a8f21c95012af
-    # There's no good reason it should be here and not with landscape;
-    # something to experiment with
-    # - postgresql-14-debversion
-    # - postgresql-plpython3-14
-    # - postgresql-contrib
+      # https://github.com/postgres/postgres/commit/4f7f7b0375854e2f89876473405a8f21c95012af
+      # There's no good reason it should be here and not with landscape;
+      # something to experiment with
+      # - postgresql-14-debversion
+      # - postgresql-plpython3-14
+      # - postgresql-contrib
     override-build: |
       craftctl default
 
