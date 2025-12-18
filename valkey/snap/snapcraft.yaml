@@ -67,4 +67,5 @@ parts:
     override-prime: |
       craftctl default
 
-      find "${CRAFT_PRIME}/usr/bin" -exec ${CRAFT_ARCH_BUILD_FOR}-strip -s -R .comment -R .note {} \;
+      find "${CRAFT_PRIME}/usr/bin" -exec \
+        ${CRAFT_ARCH_TRIPLET_BUILD_FOR}-strip -s -R .comment -R .note {} \;
