@@ -30,6 +30,9 @@ architectures:
   - build-on: [amd64, arm64]
     build-for: [arm64]
 
+lint:
+  ignore: [library]
+
 apps:
   valkey:
     command: usr/bin/valkey-server $SNAP_COMMON/valkey.conf

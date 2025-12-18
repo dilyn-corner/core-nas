@@ -23,6 +23,9 @@ architectures:
   - build-on: [amd64, arm64]
     build-for: [arm64]
 
+lint:
+  ignore: [library]
+
 plugs:
   graphics-core22:
     interface: content

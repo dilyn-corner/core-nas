@@ -25,6 +25,9 @@ architectures:
   - build-on: [amd64, arm64]
     build-for: [arm64]
 
+lint:
+  ignore: [library]
+
 package-repositories:
   - type: apt
     url: https://repo.jellyfin.org/ubuntu

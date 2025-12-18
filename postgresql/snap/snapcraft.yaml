@@ -37,6 +37,9 @@ architectures:
   - build-on: [amd64, arm64]
     build-for: [arm64]
 
+lint:
+  ignore: [library]
+
 # pgdg ships a pgvector deb but we still want Ubuntu archive's postgresql, need to be careful
 # We'd leverage the priority field, but that breaks apt's ability to fetch the pgvector package
 package-repositories:
