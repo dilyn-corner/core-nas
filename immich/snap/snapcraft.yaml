@@ -164,7 +164,7 @@ parts:
     source: https://github.com/immich-app/immich
     source-depth: 1
     source-type: git
-    source-tag: v2.4.0
+    source-tag: v2.4.1
     build-snaps: [node/22/stable]
     stage-snaps: [node/22/stable]
     build-packages:
@@ -274,7 +274,7 @@ parts:
     source: https://github.com/immich-app/immich
     source-depth: 1
     source-type: git
-    source-tag: v2.4.0
+    source-tag: v2.4.1
     source-subdir: machine-learning
     uv-extras: [cpu]
     build-snaps: [astral-uv]
