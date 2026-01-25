@@ -1,6 +1,6 @@
 name: dilyn-tubesync
 base: core22
-version: "0.15.12"
+version: "0.16.1"
 icon: snap/gui/icon.svg
 license: "CC-BY-NC-SA-4.0 AND AGPL-3.0"
 website: https://github.com/meeb/tubesync
