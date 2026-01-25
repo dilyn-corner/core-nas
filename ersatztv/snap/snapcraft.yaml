@@ -1,5 +1,5 @@
 name: dilyn-ersatztv
-version: "25.9.0"
+version: "26.1.1"
 base: core22
 icon: snap/gui/icon.png
 license: "CC-BY-NC-SA-4.0 AND Zlib"
