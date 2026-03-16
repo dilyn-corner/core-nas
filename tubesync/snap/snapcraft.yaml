@@ -1,6 +1,6 @@
 name: dilyn-tubesync
 base: core22
-version: "0.16.1"
+version: "0.16.2"
 icon: snap/gui/icon.svg
 license: "CC-BY-NC-SA-4.0 AND AGPL-3.0"
 website: https://github.com/meeb/tubesync
@@ -32,8 +32,7 @@ confinement: strict
 
 architectures:
   - build-on: [amd64]
-  - build-on: [amd64, arm64]
-    build-for: [arm64]
+  - build-on: [arm64]
 
 lint:
   ignore: [library]
@@ -102,7 +101,6 @@ parts:
       - on amd64 to arm64:
           - LD_LIBRARY_PATH: "${CRAFT_PART_INSTALL}/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${CRAFT_PART_INSTALL}/lib"
           - CC: "${CRAFT_ARCH_TRIPLET_BUILD_FOR}-gcc"
-    stage-snaps: [deno/latest/stable]
     stage-packages:
       - libmysqlclient21:${CRAFT_ARCH_BUILD_FOR}
       - python3:${CRAFT_ARCH_BUILD_FOR}
@@ -132,8 +130,18 @@ parts:
       cp -rf "${CRAFT_PART_BUILD}/fontawesome-free" \
              "${CRAFT_PART_BUILD}/tubesync"         \
              "${CRAFT_PART_INSTALL}"
-    organize:
-      deno: bin/deno
+
+  deno:
+    plugin: dump
+    build-packages: [curl, unzip]
+    source: https://github.com/denoland/deno_install
+    source-depth: 1
+    source-type: git
+    build-environment:
+      - DENO_INSTALL: "${CRAFT_PART_BUILD}"
+    override-build: |
+      "${CRAFT_PART_BUILD}/install.sh"
+      cp -f "${CRAFT_PART_BUILD}/bin/deno"    "${SNAPCRAFT_PART_INSTALL}/deno"
 
   # Remove any overlapping binaries provided by our graphics snap
   graphics-core22:
