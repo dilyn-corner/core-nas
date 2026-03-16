@@ -44,7 +44,7 @@ parts:
     source: https://github.com/valkey-io/valkey
     source-depth: 1
     source-type: git
-    source-tag: 9.0.2
+    source-tag: 9.0.3
     build-packages:
       - libsystemd-dev:${CRAFT_ARCH_BUILD_FOR}
       - libssl-dev:${CRAFT_ARCH_BUILD_FOR}
