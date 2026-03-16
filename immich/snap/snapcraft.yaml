@@ -40,11 +40,18 @@ assumes: [snapd2.68]
 
 architectures:
   - build-on: [amd64]
-  - build-on: [amd64, arm64]
-    build-for: [arm64]
+  # Cross-building currently doesn't work all that well. TBD. For now we can use
+  # remote-build and make some small changes to the snapcraft.yaml.
+  - build-on: [arm64]
 
 lint:
   ignore: [library]
+
+# v2.5.0+ requires python 3.11 which is not available from the archive on Jammy
+package-repositories:
+  - type: apt
+    ppa: deadsnakes/ppa
+    key-id: F23C5A6CF475977595C89F51BA6932366A755776
 
 # postgres hates to run with root permissions and this is a workaround to allow
 # a snap to drop privileges to some non-root user.
@@ -160,11 +167,11 @@ apps:
 
 parts:
   immich:
-    plugin: nil
+    plugin: python
     source: https://github.com/immich-app/immich
     source-depth: 1
     source-type: git
-    source-tag: v2.4.1
+    source-tag: v2.5.6
     build-snaps: [node/22/stable]
     stage-snaps: [node/22/stable]
     build-packages:
@@ -188,10 +195,13 @@ parts:
       - libtiff5-dev
       - libvips-dev
       - libwebp-dev
+      - libpython3.11-dev:${CRAFT_ARCH_BUILD_FOR}
+      - python3.11
     stage-packages:
       - libstdc++6:${CRAFT_ARCH_BUILD_FOR}
       - libvips42:${CRAFT_ARCH_BUILD_FOR}
       - perl:${CRAFT_ARCH_BUILD_FOR}
+      - python3.11:${CRAFT_ARCH_BUILD_FOR}
     build-environment:
       - COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
       # Perhaps one day? This mainly impacts libHEIF
@@ -274,11 +284,12 @@ parts:
     source: https://github.com/immich-app/immich
     source-depth: 1
     source-type: git
-    source-tag: v2.4.1
+    source-tag: v2.5.6
     source-subdir: machine-learning
     uv-extras: [cpu]
     build-snaps: [astral-uv]
     stage-packages:
+      - gunicorn:all
       - libgl1:${CRAFT_ARCH_BUILD_FOR}
       - libmimalloc2.0:${CRAFT_ARCH_BUILD_FOR}
     override-build: |
@@ -286,6 +297,11 @@ parts:
 
       mkdir -p "${CRAFT_PART_INSTALL}/etc"
       cp -rf machine-learning/immich_ml/log_conf.json "${CRAFT_PART_INSTALL}/etc"
+    override-stage: |
+      craftctl default
+
+      unlink "${CRAFT_STAGE}/bin/python"
+      ln -sf python3 "${CRAFT_STAGE}/bin/python"
 
   # Generate build-lock.json
   build-lock:
