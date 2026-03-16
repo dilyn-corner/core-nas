@@ -65,7 +65,7 @@ $(SNAP_OBJ): $(SNAP_PRIME)
 
 .DEFAULT: release-all
 
-.PHONY: prime-all pack-all clean
+.PHONY: prime-all pack-all release-all clean
 
 # Simple rule to generate all prime directories
 prime-all: $(SNAP_PRIME)
@@ -75,8 +75,11 @@ pack-all:  $(SNAP_OBJ)
 
 # Real rule to upload and release the snap packages
 release-all: $(SNAP_OBJ)
-	for snap in $(SNAP_OBJ); do        \
-		$(SC) $(UPFLG) $(TRK) $$snap ; \
+	for snap in $(SNAP_OBJ); do                                     \
+		$(SC) promote --from channel candidate --to-channel stable; \
+		$(SC) promote --from channel beta --to-channel candidate;   \
+		$(SC) promote --from channel edge --to-channel beta;        \
+		$(SC) $(UPFLG) $(TRK) $$snap ;                              \
 	done
 
 clean:
