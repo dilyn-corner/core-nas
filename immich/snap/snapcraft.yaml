@@ -52,6 +52,10 @@ package-repositories:
   - type: apt
     ppa: deadsnakes/ppa
     key-id: F23C5A6CF475977595C89F51BA6932366A755776
+  # Will be available starting on core26
+  # - type: apt
+  #   ppa: jdxcode/mise
+  #   key-id: 38A097C0CCE691795E4B15BE23997D3EEE1EDC52
 
 # postgres hates to run with root permissions and this is a workaround to allow
 # a snap to drop privileges to some non-root user.
@@ -166,7 +170,20 @@ apps:
       LD_LIBRARY_PATH: ${SNAP}/postgresql/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${LD_LIBRARY_PATH}
 
 parts:
+  # mise packages from the PPA aren't available until Resolute; for now, add a
+  # simple part to get mise.
+  # Use the static mise to avoid glibc symbol errors.
+  # This is used to build the plugins, which can be made available once we transition to core24
+  # mise:
+  #   source: https://github.com/jdx/mise/releases/download/v2026.3.9/mise-v2026.3.9-linux-x64-musl.tar.xz
+  #   plugin: dump
+  #   stage:
+  #     - bin/mise
+  #   prime:
+  #     - -*
+
   immich:
+    # after: [mise]
     plugin: python
     source: https://github.com/immich-app/immich
     source-depth: 1
@@ -181,6 +198,7 @@ parts:
       - libfftw3-dev
       - libglib2.0-dev
       - libgsf-1-dev
+      - libheif-dev
       - libimagequant-dev
       - libjpeg-turbo8-dev
       - liblcms2-dev
@@ -204,13 +222,19 @@ parts:
       - python3.11:${CRAFT_ARCH_BUILD_FOR}
     build-environment:
       - COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
-      # Perhaps one day? This mainly impacts libHEIF
-      # - SHARP_FORCE_GLOBAL_LIBVIPS: "true"
+      - NODE_OPTIONS: --max-old-space-size=4096
+      # - MISE_TRUSTED_CONFIG_PATHS: "${CRAFT_PART_BUILD}/plugins/mise.toml"
+      - SHARPIGNORE_GLOBAL_LIBVIPS: "true"
       - CI: "1"
     override-pull: |
       craftctl default
 
       patch -p1 < "${CRAFT_PROJECT_DIR}/patches/pgdump.patch"
+
+      # Unecessary license
+      rm cli/LICENSE
+      # Interrupts unattended builds -- can be enabled when we transition to core24
+      # rm "${CRAFT_PART_SRC}/mise.toml"
 
       craftctl set version=$(git describe --tags)
 
@@ -218,9 +242,26 @@ parts:
       npm install --global corepack@latest
       corepack enable pnpm
 
-      # Certain environments, like ZFS, have an issue this works around
-      # https://github.com/pnpm/pnpm/issues/7024#issuecomment-1825412952
-      pnpm fetch --package-import-method=hardlink
+      # Avoid calling npm during builds
+      pnpm fetch \
+        --ignore-scripts
+
+      pnpm install      \
+        --offline       \
+        --filter immich \
+        --frozen-lockfile
+
+      _sharp_dir="$(pnpm patch sharp | sed -n '3p' | sed 's/^[[:space:]]*//')"
+      cd "${_sharp_dir}"
+      sed -i 's/|| npm run build",/|| pnpm run build",/' package.json
+      cd -
+
+      # Run the scripts
+      pnpm patch-commit "${_sharp_dir}" 
+
+      # Fix a dependency resolution problem
+      cd "${CRAFT_PART_SRC}/web"
+      pnpm add 'three@^0.179.0'
     override-build: |
       install -Dm644 LICENSE \
         "${CRAFT_PART_INSTALL}/usr/lib/immich/app/LICENSE"
@@ -231,53 +272,55 @@ parts:
                "${CRAFT_PART_INSTALL}/usr/lib/immich/build" \
                "${CRAFT_PART_INSTALL}/usr/lib/immich/app/server"
 
-      pnpm install \
-        --filter immich \
-        --frozen-lockfile --offline
-
-      cd "${CRAFT_PART_BUILD}/server"
-      pnpm exec nest build --type-check
-      cd -
-
       # Server
-      pnpm \
+      cd "${CRAFT_PART_BUILD}/server"
+
+      pnpm exec nest build \
+        --type-check
+
+      pnpm              \
         --filter immich \
         --frozen-lockfile build
 
-      pnpm \
-        --filter immich \
-        --frozen-lockfile \
-        --prod deploy \
+      pnpm                   \
+        --prod               \
+        --filter immich      \
+        --frozen-lockfile    \
+        --no-optional deploy \
         "${CRAFT_PART_INSTALL}/usr/lib/immich/app/server"
-
-      # TOOD: filter this out via stage
-      rm -rf ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/bin            \
-             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/test           \
-             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/.nvmrc         \
-             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/Dockerfile     \
-             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/.prettierrc    \
-             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/nest-cli.json  \
-             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/pnpm-lock.yaml \
-             ${CRAFT_PART_INSTALL}/usr/lib/immich/app/server/.prettierignore
+      cd -
+      ## 
 
       # SDK and web frontend
-      pnpm \
+      pnpm                   \
         --filter @immich/sdk \
-        --filter immich-web \
-        --frozen-lockfile \
-        --package-import-method=hardlink \
-        --force install
+        --filter immich-web  \
+        --frozen-lockfile install
 
-      pnpm \
+      pnpm                   \
         --filter @immich/sdk \
         --filter immich-web build
 
       mkdir -p "${CRAFT_PART_INSTALL}/usr/lib/immich/build"
-      cp -rf "${CRAFT_PART_BUILD}/web/build" "${CRAFT_PART_INSTALL}/usr/lib/immich/build/www"
+      cp -af "${CRAFT_PART_BUILD}/web/build" "${CRAFT_PART_INSTALL}/usr/lib/immich/build/www"
+
+      # Plugins - these can be available once we transition to core24
+      # cd plugins
+      # mise install
+      # mise run build
 
       # Install the immich-core manifest
       install -Dm644 "${CRAFT_PART_SRC}/plugins/manifest.json" \
         "${CRAFT_PART_INSTALL}/usr/lib/immich/build/corePlugin/manifest.json"
+    stage:
+      - -usr/lib/immich/app/server/bin
+      - -usr/lib/immich/app/server/test
+      - -usr/lib/immich/app/server/.nvmrc
+      - -usr/lib/immich/app/server/Dockerfile
+      - -usr/lib/immich/app/server/.prettierrc
+      - -usr/lib/immich/app/server/nest-cli.json
+      - -usr/lib/immich/app/server/pnpm-lock.yaml
+      - -usr/lib/immich/app/server/.prettierignore
 
   machine-learning:
     plugin: uv
