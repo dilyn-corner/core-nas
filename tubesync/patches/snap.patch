@@ -41,10 +41,10 @@ index 5b8ab1a4..3ef5dc98 100644
      outtmpl = dict(
          default='',
 diff --git a/tubesync/tubesync/gunicorn.py b/tubesync/tubesync/gunicorn.py
-index 97e092da..10d3d969 100644
+index 30547212..3d2052ea 100644
 --- a/tubesync/tubesync/gunicorn.py
 +++ b/tubesync/tubesync/gunicorn.py
-@@ -18,17 +18,17 @@ def get_num_workers():
+@@ -18,19 +18,19 @@ def get_num_workers():
  
  def get_bind():
      host = os.getenv('LISTEN_HOST', '127.0.0.1')
@@ -58,6 +58,8 @@ index 97e092da..10d3d969 100644
 -chdir = '/app'
 +chdir = '/var/snap/dilyn-tubesync/common/tubesync'
  daemon = False
+ control_socket_disable = True
+ control_socket = '/run/app/gunicorn.ctl'
 -pidfile = '/run/app/gunicorn.pid'
 -user = 'app'
 -group = 'app'
